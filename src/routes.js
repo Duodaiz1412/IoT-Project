@@ -6,7 +6,7 @@ const ActionHistory = React.lazy(() => import("./pages/ActionHistory"))
 const Profile = React.lazy(() => import("./pages/Profile"))
 
 const routes = [
-    {path: '/', name: 'DashBoard', element: Dashboard},
+    {path: '/', name: 'Dashboard', element: Dashboard},
     {path: '/datasensor', name: 'DataSensor', element: DataSensor},
     {path: '/actionhistory', name: 'ActionHistory', element: ActionHistory},
     {path: '/profile', name: 'Profile', element: Profile},

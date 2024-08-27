@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   CSidebar,
   CSidebarHeader,
   CSidebarBrand,
   CCloseButton,
   CSidebarToggler,
-  CSidebarFooter
+  CSidebarFooter,
 } from "@coreui/react";
 
 import { AppSidebarNav } from "./AppSidebarNav";
@@ -13,35 +14,31 @@ import { AppSidebarNav } from "./AppSidebarNav";
 import navigation from "../_nav";
 
 const AppSidebar = () => {
-  const [sidebarShow, setSidebarShow] = useState(true);
-  const [unfoldable, setUnfoldable] = useState(false);
-  const [isClose, setIsClose] = useState(false);
+  const dispatch = useDispatch();
+  const unfoldable = useSelector((state) => state.sidebarUnfoldable);
+  const sidebarShow = useSelector((state) => state.sidebarShow);
+
   return (
     <>
-      <CSidebar 
-        className="border-end" 
-        colorScheme="dark" 
+      <CSidebar
+        className="border-end"
+        colorScheme="dark"
         position="fixed"
-        visible= {sidebarShow}
-        unfoldable= {unfoldable}
+        visible={sidebarShow}
+        unfoldable={unfoldable}
         onVisibleChange={(visible) => {
-          setSidebarShow(visible);
+          dispatch({ type: "set", sidebarShow: visible });
         }}
-        narrow= {isClose}
-        >
+      >
         <CSidebarHeader className="border-bottom">
-          <CSidebarBrand>IoT Project</CSidebarBrand>
-          <CCloseButton
-            onClick = {() => setIsClose(!isClose)}
-          />
+          <CSidebarBrand customClassName="sidebar-brand-full">
+            IoT Project
+          </CSidebarBrand>
+
         </CSidebarHeader>
         <AppSidebarNav items={navigation} />
         <CSidebarFooter className="border-top d-none d-lg-flex">
-            <CSidebarToggler
-              onClick= {() => setUnfoldable(!unfoldable)}
-          />
         </CSidebarFooter>
-        
       </CSidebar>
     </>
   );
