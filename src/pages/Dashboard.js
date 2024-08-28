@@ -42,7 +42,7 @@ function Dashboard() {
             <Line
               className="rounded border border-green bg-white"
               data={{
-                labels: ["", "", "", "", ""],
+                labels: ["", "", "", "", "", ""],
                 datasets: [
                   {
                     type: "bar",
@@ -51,13 +51,14 @@ function Dashboard() {
                     fill: true,
                     backgroundColor: "rgba(255, 99, 132, 0.2)",
                     borderColor: "rgba(255, 99, 132, 1)",
-                    yAxisID: "y", // Primary y-axis
+                    yAxisID: "y", 
                   },
                   {
                     type: "bar",
                     label: "Độ ẩm",
                     data: [50, 51, 52, 53, 50, 49],
                     fill: true,
+                    backgroundColor: "rgba(54, 162, 235, 0.2)",
                     yAxisID: "y", 
                   },
                   {
@@ -97,7 +98,7 @@ function Dashboard() {
                 plugins: {
                   title: {
                     display: true,
-                    text: "Biểu đồ nhiệt độ",
+                    text: "Biểu đồ 6 giá trị đo gần nhất",
                     font: {
                       size: 20,
                     },
