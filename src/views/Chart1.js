@@ -7,7 +7,7 @@ function Chart1() {
               className="mt-3 mx-3"
               style={{ height: "70px" }}
               data={{
-                labels: ["", "", "", "", "", "", "July"],
+                labels: ["", "", "", "", "", "", ""],
                 datasets: [
                   {
                     label: "Nhiệt độ",

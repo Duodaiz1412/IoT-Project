@@ -103,6 +103,7 @@ function ActionHistory() {
         fixedHeader
         highlightOnHover
       />
+      <br/>
     </>
   );
 }

@@ -4,7 +4,7 @@ import { FaFacebook, FaGithub, FaYoutube } from "react-icons/fa";
 
 const ProfilePage = () => {
   return (
-    <Container className="mt-5">
+    <Container className="mt-5 mb-4">
       <Row className="justify-content-center">
         <Col md={6}>
           <Card className="text-center">
@@ -31,14 +31,13 @@ const ProfilePage = () => {
 
           <Card className="mt-3">
             <Card.Body>
-              {/* <Card.Title>About Me</Card.Title>
+              <Card.Title>About This Project</Card.Title>
               <Card.Text>
-                Hello! I’m John Doe, a passionate software developer with
-                expertise in web development, particularly in React and
-                Bootstrap. I love to learn new technologies and improve my
-                skills.
+              Build an IoT system to monitor and control environmental parameters such as temperature, humidity, and light. 
+              The system also allows for controlling devices such as fans, air conditioners, 
+              and lights through a user-friendly interface.
               </Card.Text>
-              <hr /> */}
+              <hr />
               <Row>
                 <Col md={6}>
                   <h5 className="mb-3">Contact Information</h5>

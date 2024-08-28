@@ -8,10 +8,10 @@ function Chart2() {
               className="mt-3 mx-3"
               style={{ height: "70px" }}
               data={{
-                labels: ["", "", "", "", "", "", "July"],
+                labels: ["", "", "", "", "", "", ""],
                 datasets: [
                   {
-                    label: "Nhiệt độ",
+                    label: "Độ ẩm",
                     backgroundColor: "transparent",
                     borderColor: "rgba(255,255,255,.55)",
                     // pointBackgroundColor: getStyle('--cui-primary'),

@@ -66,6 +66,7 @@ function DataSensor() {
         fixedHeader
         highlightOnHover
       />
+      <br/>
     </>
   );
 }

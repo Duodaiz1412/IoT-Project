@@ -9,14 +9,14 @@ function Chart3() {
               className="mt-3 mx-3"
               style={{ height: "70px" }}
               data={{
-                labels: ["", "", "", "", "", "", "July"],
+                labels: ["", "", "", "", "", "", ""],
                 datasets: [
                   {
-                    label: "Nhiệt độ",
+                    label: "Độ sáng",
                     backgroundColor: "transparent",
                     borderColor: "rgba(255,255,255,.55)",
                     // pointBackgroundColor: getStyle('--cui-primary'),
-                    data: [65, 59, 65, 65, 65, 65, 65],
+                    data: [800, 900, 1000, 1000, 900, 800, 1100],
                   },
                 ],
               }}
@@ -41,8 +41,8 @@ function Chart3() {
                     },
                   },
                   y: {
-                    min: 30,
-                    max: 89,
+                    min: 500,
+                    max: 1500,
                     display: false,
                     grid: {
                       display: false,

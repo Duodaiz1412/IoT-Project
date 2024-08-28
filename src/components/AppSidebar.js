@@ -4,14 +4,16 @@ import {
   CSidebar,
   CSidebarHeader,
   CSidebarBrand,
-  CCloseButton,
-  CSidebarToggler,
   CSidebarFooter,
 } from "@coreui/react";
 
-import { AppSidebarNav } from "./AppSidebarNav";
+import CIcon from "@coreui/icons-react";
 
+import { AppSidebarNav } from "./AppSidebarNav";
 import navigation from "../_nav";
+import logo from "../assets/logo.png";
+
+import '@fortawesome/fontawesome-free/css/all.min.css'; // Import FontAwesome
 
 const AppSidebar = () => {
   const dispatch = useDispatch();
@@ -31,12 +33,13 @@ const AppSidebar = () => {
         }}
       >
         <CSidebarHeader className="border-bottom">
-          <CSidebarBrand customClassName="sidebar-brand-full">
-            IoT Project
+          <CSidebarBrand customClassName="sidebar-brand-full" style={{ textDecoration: 'none', fontWeight: 'bold'}}>
+            <img src={logo} alt="Logo" height={32} className="sidebar-brand-full" />
+            &nbsp; IoT Project
           </CSidebarBrand>
-
         </CSidebarHeader>
-        <AppSidebarNav items={navigation} />
+
+        <AppSidebarNav items={navigation} className="sidebar-nav" />
         <CSidebarFooter className="border-top d-none d-lg-flex">
         </CSidebarFooter>
       </CSidebar>

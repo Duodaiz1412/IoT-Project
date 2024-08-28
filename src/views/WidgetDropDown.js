@@ -50,7 +50,7 @@ const WidgetDropDown = (props) => {
 
   const [temp, setTemp] = useState(24);
   const [humidity, setHumidity] = useState(0);
-  const [lux, setLux] = useState(100);
+  const [lux, setLux] = useState(500);
 
   return (
     <CRow className={props.className} xs={{ gutter: 4 }}>
@@ -109,7 +109,7 @@ const WidgetDropDown = (props) => {
           }
           title="Độ sáng"
           action={
-            <CiBrightnessDown className="lux" onClick={() => setLux(lux + 10)}>+</CiBrightnessDown>
+            <CiBrightnessDown className="lux" onClick={() => setLux(lux + 50)}>+</CiBrightnessDown>
           }
           chart={
             <Chart3/>
