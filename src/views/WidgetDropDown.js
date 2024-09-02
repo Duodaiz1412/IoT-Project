@@ -99,7 +99,7 @@ const WidgetDropDown = (props) => {
       <CCol>
         <CWidgetStatsA
           style={{
-            backgroundColor: getLuxColor(lux), // Set dynamic background color
+            backgroundColor: getLuxColor(lux),
             color: "#fff", 
           }}
           value={

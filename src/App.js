@@ -3,7 +3,6 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { CSpinner } from "@coreui/react";
 import AppSidebar from "./components/AppSidebar";
 import "./styles/style.scss";
-import "./font/regular.css";
 
 
 const DefaultLayout = React.lazy(() => import("./layout/DefaultLayout"));

@@ -11,7 +11,10 @@ function DataSensor() {
 
   function handleFilter(e) {
     const value = data.filter((row) =>{
-      return row.temperature.toString().includes(e.target.value) || row.humidity.toString().includes(e.target.value) || row.lux.toString().includes(e.target.value) || row.time.toString().includes(e.target.value)
+      return row.temperature.toString().includes(e.target.value) || 
+      row.humidity.toString().includes(e.target.value) || 
+      row.lux.toString().includes(e.target.value) || 
+      row.date.toString().includes(e.target.value)
     })
     setRecord(value)
   }

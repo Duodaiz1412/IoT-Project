@@ -71,7 +71,7 @@ const ProfilePage = () => {
                       href="https://github.com/Dazkiz1412"
                       target="_blank"
                     >
-                      <FaGithub className="me-2" /> GitHub
+                      <FaGithub className="me-2 " /> GitHub
                     </Button>
                   </div>
 
