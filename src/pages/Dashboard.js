@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import WidgetDropDown from "../views/WidgetDropDown";
 import {
   CContainer,
@@ -9,6 +9,7 @@ import {
   CHeader,
   CButton,
 } from "@coreui/react";
+import axios from "axios";
 
 import { FaFan, FaLightbulb, FaWind } from "react-icons/fa";
 import { Line } from "react-chartjs-2";
@@ -19,9 +20,53 @@ function Dashboard() {
   const [lightStatus, setLightStatus] = useState(false);
   const [acStatus, setAcStatus] = useState(false);
 
-  const toggleFan = () => setFanStatus(!fanStatus);
-  const toggleLight = () => setLightStatus(!lightStatus);
-  const toggleAc = () => setAcStatus(!acStatus);
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("http://localhost:8081/status");
+      console.log(res.data);
+      setFanStatus(res.data[0].fan === 1);
+      setLightStatus(res.data[0].light === 1);
+      setAcStatus(res.data[0].ac === 1);
+    } catch (error) {
+      console.error("Error fetching status:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData(); // Fetch immediately on mount
+  }, []);
+
+  const [loading, setLoading] = useState({
+    fan: false,
+    light: false,
+    ac: false,
+  });
+
+  const handleAction = async (device, action) => {
+    setLoading((prev) => ({ ...prev, [device]: true }));
+    const actionData = {
+      device: device,
+      action: action,
+    };
+    try {
+      const res = await axios.post('http://localhost:8081/actiondata', actionData);
+      console.log(res.data.action);
+      console.log(res.data.device);
+      if (res.data.action === "on") {
+        if (device === "fan") setFanStatus(true);
+        if (device === "light") setLightStatus(true);
+        if (device === "ac") setAcStatus(true);
+      } else if (res.data.action === "off") {
+        if (device === "fan") setFanStatus(false);
+        if (device === "light") setLightStatus(false);
+        if (device === "ac") setAcStatus(false);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading((prev) => ({ ...prev, [device]: false }));
+    }
+  };
 
   return (
     <>
@@ -127,7 +172,7 @@ function Dashboard() {
               onMouseLeave={() => setIsHovered(false)}
             >
               <CButton
-                onClick={toggleFan}
+                onClick={() => !loading.fan && handleAction("fan", fanStatus ? "off" : "on")}
                 color={fanStatus ? "" : "secondary"}
                 className={
                   "w-100 h-100 position-relative d-flex align-items-center justify-content-center "
@@ -139,7 +184,7 @@ function Dashboard() {
                     fanStatus ? "spinning-fan" : ""
                   }`}
                 />
-                <span>{fanStatus ? "Fan: On" : "Fan: Off"}</span>
+                <span>{loading.fan ? "Loading..." : fanStatus ? "Fan: On" : "Fan: Off"}</span>
               </CButton>
             </CCard>
 
@@ -149,7 +194,7 @@ function Dashboard() {
               style={{ height: "8rem", padding: 0 }}
             >
               <CButton
-                onClick={toggleLight}
+                onClick={() => !loading.light && handleAction("light", lightStatus ? "off" : "on")}
                 color={lightStatus ? "warning" : "secondary"}
                 className="w-100 h-100 position-relative d-flex align-items-center justify-content-center"
                 style={{ fontSize: "1.5rem" }}
@@ -159,7 +204,7 @@ function Dashboard() {
                     lightStatus ? "shining-light" : ""
                   }`}
                 />
-                <span>{lightStatus ? "Light: On" : "Light: Off"}</span>
+                <span>{loading.light ? "Loading..." : lightStatus ? "Light: On" : "Light: Off"}</span>
               </CButton>
             </CCard>
 
@@ -169,7 +214,7 @@ function Dashboard() {
               style={{ height: "8rem", padding: 0 }}
             >
               <CButton
-                onClick={toggleAc}
+                onClick={() => !loading.ac && handleAction("ac", acStatus ? "off" : "on")}
                 color={acStatus ? "info" : "secondary"}
                 className="w-100 h-100 position-relative d-flex align-items-center justify-content-center"
                 style={{ fontSize: "1.5rem" }}
@@ -179,7 +224,7 @@ function Dashboard() {
                     acStatus ? "blowing-air" : ""
                   }`}
                 />
-                <span>{acStatus ? "AC: On" : "AC: Off"}</span>
+                <span>{loading.ac ? "Loading..." : acStatus ? "AC: On" : "AC: Off"}</span>
               </CButton>
             </CCard>
           </CCol>

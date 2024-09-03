@@ -1,51 +1,236 @@
-import express from 'express';
-
-const app = require("express")
-const PORT = 8081;
-
+const mysql = require("mysql");
+const express = require("express");
+const cors = require("cors");
 const mqtt = require("mqtt");
-const client = mqtt.connect("mqtt://172.20.10.2")
 
-const MQTT_TOPIC = "iot_project"
+const app = express();
+const PORT = 8081;
+const client = mqtt.connect("mqtt://172.20.10.2");
+
+const MQTT_TOPIC = "iot_project";
+const MQTT_REQUEST = "iot_project_request";
+const MQTT_UPDATE = "iot_project_update";
+const MQTT_GET_STATUS = "iot_project_status";
+const MQTT_RESPOND = "iot_project_respond";
 
 // Allow cross-origin requests from the frontend app
-app.use(cors({
-    origin: 'http://localhost:3000',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true
-  }));
+app.use(
+  cors({
+    origin: "http://localhost:3001",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+
+// Create a connection to the database
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "iot_project",
+  port: "3307",
+});
 
 // Format time from Date() to "YY:MM:DD hh:mm:ss"
 function getFormattedTime() {
-    const now = new Date();
-    
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');  // Months are 0-based
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+  const now = new Date();
+  return `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(
+    now.getDate()
+  ).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(
+    now.getMinutes()
+  ).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
 }
 
 client.on("connect", () => {
-    client.subscribe(MQTT_TOPIC, (err) => {
-        if(err){
-            console.log(err)
-        }
-    });
+  client.subscribe(MQTT_TOPIC, (err) => {
+    if (err) {
+      console.log(err);
+    }
+  });
 });
 
 client.on("message", (topic, message) => {
-    const data = JSON.parse(message)
-    
-    // Round the data
-    data.humidity = parseFloat(data.humidity.toFixed(1))
-    data.temperature = parseFloat(data.temperature.toFixed(1))
-    data.lux = parseFloat(data.lux.toFixed(1))
-    
-    // Add current date to JSON
-    data.date = getFormattedTime()
-    console.log(JSON.stringify(data))
-})
+  if (topic === MQTT_TOPIC) {
+    let data;
+    try {
+      data = JSON.parse(message);
+    } catch (error) {
+      console.error("Failed to parse MQTT message as JSON:", error);
+      return;
+    }
+
+    if (data.temperature !== undefined) data.temperature = parseFloat(data.temperature.toFixed(1));
+    if (data.humidity !== undefined) data.humidity = parseFloat(data.humidity.toFixed(1));
+    if (data.lux !== undefined) data.lux = parseFloat(data.lux.toFixed(1));
+
+    data.date = getFormattedTime();
+
+    const sql = "INSERT INTO data_sensor (temperature, humidity, lux, date, fan, light, ac) VALUES (?)";
+    const values = [data.temperature, data.humidity, data.lux, data.date, data.fan, data.light, data.ac];
+
+    db.query(sql, [values], (err) => {
+      if (err) {
+        console.error("Error inserting data into database:", err);
+      } else {
+        // console.log("Data inserted into database:", data);
+      }
+    });
+  }
+});
+
+// Get status data from ESP32
+app.get("/status", (req, res) => {
+  db.query("SELECT fan, light, ac FROM data_sensor ORDER BY id DESC LIMIT 1;", (err, result) => {
+    if (err) {
+      console.error("Error executing SQL query:", err);
+      return res.status(500).json({ error: "Error executing SQL query" });
+    }
+
+    const data = result.map((row) => {
+      return {
+        fan: row.fan,
+        light: row.light,
+        ac: row.ac,
+      };
+    });
+
+    return res.json(data);
+  })
+});
+
+// Get data from the database for data sensor
+app.get("/data1", (req, res) => {
+  const sql = "SELECT * FROM data_sensor ORDER BY id DESC";
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error executing SQL query:", err);
+      return res.status(500).json({ error: "Error executing SQL query" });
+    }
+
+    const data = result.map((row) => {
+      const dateObj = new Date(row.date);
+      const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+        dateObj.getUTCMonth() + 1
+      ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+        2,
+        "0"
+      )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+        dateObj.getUTCMinutes()
+      ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
+
+      return {
+        id: row.id,
+        temperature: row.temperature,
+        humidity: row.humidity,
+        lux: row.lux,
+        date: formattedDate,
+      };
+    });
+
+    return res.json(data);
+  });
+});
+
+// Get data from the database for action history
+app.get("/data2", (req, res) => {
+  const sql = "SELECT * FROM action_history ORDER BY id DESC";
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error executing SQL query:", err);
+      return res.status(500).json({ error: "Error executing SQL query" });
+    }
+
+    const data = result.map((row) => {
+      const dateObj = new Date(row.date);
+      const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+        dateObj.getUTCMonth() + 1
+      ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+        2,
+        "0"
+      )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+        dateObj.getUTCMinutes()
+      ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
+
+      return {
+        id: row.id,
+        device: row.device,
+        action: row.action,
+        date: formattedDate,
+      };
+    });
+
+    return res.json(data);
+  });
+});
+
+app.post("/actiondata", async (req, res) => {
+  const { device, action } = req.body;
+
+  try {
+    await new Promise((resolve, reject) => {
+      client.subscribe(MQTT_UPDATE, (err) => {
+        if (err) {
+          console.error("Failed to subscribe to MQTT topic:", err);
+          return reject(new Error("Failed to subscribe to MQTT topic"));
+        }
+        resolve();
+      });
+    });
+
+    client.publish(MQTT_REQUEST, JSON.stringify({ device, action }), (err) => {
+      if (err) {
+        console.error("Failed to send data to MQTT Broker:", err);
+        return res.status(500).json({ error: "Failed to send action data to MQTT" });
+      }
+      console.log("Action data sent to MQTT:", JSON.stringify({ device, action }));
+    });
+
+    const timeout = setTimeout(() => {
+      console.error("Timeout waiting for MQTT response");
+      client.unsubscribe(MQTT_UPDATE);
+      client.removeListener("message", handleMessage);
+      return res.status(500).json({ error: "Timeout waiting for MQTT response" });
+    }, 10000); // 10 seconds timeout
+
+    const handleMessage = (topic, message) => {
+      if (topic === MQTT_UPDATE) {
+        clearTimeout(timeout);
+        client.unsubscribe(MQTT_UPDATE);
+        client.removeListener("message", handleMessage);
+
+        try {
+          const data = JSON.parse(message);
+          const { device: responseDevice, action: responseAction } = data;
+          if (responseDevice === device && responseAction === action) {
+            const dev = device === "light" ? "Đèn" : device === "fan" ? "Quạt" : "Điều hoà";
+            const act = action === "on" ? "Bật" : "Tắt";
+            const sql = "INSERT INTO action_history (device, action, date) VALUES (?)";
+            const values = [dev, act, getFormattedTime()];
+
+            db.query(sql, [values], (err) => {
+              if (err) {
+                console.error("Error inserting action history into database:", err);
+              } else {
+                console.log("Action history inserted into database:", { dev, act });
+              }
+            });
+            return res.json({ device: responseDevice, action: responseAction });
+          }
+        } catch (error) {
+          console.error("Failed to parse MQTT response:", error);
+          return res.status(500).json({ error: "Failed to parse MQTT response" });
+        }
+      }
+    };
+
+    client.on("message", handleMessage);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

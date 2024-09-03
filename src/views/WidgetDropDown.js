@@ -54,11 +54,12 @@ const WidgetDropDown = (props) => {
 
   return (
     <CRow className={props.className} xs={{ gutter: 4 }}>
-      <CCol>
+      <CCol xs="12" sm="6" md="4">
         <CWidgetStatsA
           style={{
             backgroundColor: getTemperatureColor(temp), 
-            color: "#fff", 
+            color: "#fff",
+            maxWidth: "100%",
           }}
           value={
             <>
@@ -75,11 +76,12 @@ const WidgetDropDown = (props) => {
           }
         />
       </CCol>
-      <CCol>
+      <CCol xs="12" sm="6" md="4">
         <CWidgetStatsA
           style={{
             backgroundColor: getHumidityColor(humidity), // Set dynamic background color
             color: "#fff", // Ensure text is visible on darker backgrounds
+            maxWidth: "100%",
           }}
           // className="custom-widget"
           value={
@@ -96,11 +98,12 @@ const WidgetDropDown = (props) => {
           }
         />
       </CCol>
-      <CCol>
+      <CCol xs="12" sm="6" md="4">
         <CWidgetStatsA
           style={{
             backgroundColor: getLuxColor(lux),
-            color: "#fff", 
+            color: "#fff",
+            maxWidth: "100%",
           }}
           value={
             <>

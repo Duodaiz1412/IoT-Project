@@ -1,14 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { CHeader, CContainer } from "@coreui/react";
 import DataTable from 'react-data-table-component';
-import ActionHistoryData from "../data/ActionHistoryData";
+import ActionHistoryData,  { useActionHistoryData } from "../data/ActionHistoryData";
 import { CiSearch } from "react-icons/ci";
 
 function ActionHistory() {
-  const data = ActionHistoryData[1].data;
+  const data = useActionHistoryData();
   const [record, setRecord] = React.useState(data);
   const [deviceFilter, setDeviceFilter] = React.useState("");
   const [dateFilter, setDateFilter] = React.useState("");
+  console.log(data)
+  console.log(record)
+
+  useEffect(() => {
+    setRecord(data);
+  }, [data]);
 
 
   function handleFilter(e) {
@@ -70,7 +76,7 @@ function ActionHistory() {
         >
           <option value="">Tất cả thiết bị</option>
           <option value="đèn">Đèn</option>
-          <option value="điều hoà">Điều Hoà</option>
+          <option value="điều hoà">Điều hoà</option>
           <option value="quạt">Quạt</option>
         </select>
 

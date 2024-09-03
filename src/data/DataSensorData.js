@@ -1,4 +1,5 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
+import axios from 'axios';
 
 const DataSensorData = [
     {
@@ -31,128 +32,36 @@ const DataSensorData = [
         ]
     },
     {
-        data: [
-            {
-                id: 1,
-                temperature: 30,
-                humidity: 50,
-                lux: 1000,
-                date: '2024-08-01 12:00:00'
-            },
-            {
-                id: 2,
-                temperature: 31,
-                humidity: 51,
-                lux: 1100,
-                date: '2024-08-01 12:01:00'
-            },
-            {
-                id: 3,
-                temperature: 32,
-                humidity: 52,
-                lux: 1200,
-                date: '2024-08-01 12:02:00'
-            },
-            {
-                id: 4,
-                temperature: 33,
-                humidity: 53,
-                lux: 1300,
-                date: '2024-08-01 12:03:00'
-            },
-            {
-                id: 5,
-                temperature: 34,
-                humidity: 54,
-                lux: 1400,
-                date: '2024-08-01 12:04:00'
-            },
-            {
-                id: 6,
-                temperature: 35,
-                humidity: 55,
-                lux: 1500,
-                date: '2024-08-01 12:05:00'
-            },
-            {
-                id: 7,
-                temperature: 36,
-                humidity: 56,
-                lux: 1600,
-                date: '2024-08-01 12:06:00'
-            },
-            {
-                id: 8,
-                temperature: 37,
-                humidity: 57,
-                lux: 1700,
-                date: '2024-08-01 12:07:00'
-            },
-            {
-                id: 9,
-                temperature: 38,
-                humidity: 58,
-                lux: 1800,
-                date: '2024-08-01 12:08:00'
-            },
-            {
-                id: 10,
-                temperature: 39,
-                humidity: 59,
-                lux: 1900,
-                date: '2024-08-01 12:09:00'
-            },
-            {
-                id: 11,
-                temperature: 40,
-                humidity: 60,
-                lux: 2000,
-                date: '2024-08-01 12:10:00'
-            },
-            {
-                id: 12,
-                temperature: 41,
-                humidity: 61,
-                lux: 2100,
-                date: '2024-08-01 12:11:00'
-            },
-            {
-                id: 13,
-                temperature: 42,
-                humidity: 62,
-                lux: 2200,
-                date: '2024-08-01 12:12:00'
-            },
-            {
-                id: 14,
-                temperature: 43,
-                humidity: 63,
-                lux: 2300,
-                date: '2024-08-01 12:13:00'
-            },
-            {
-                id: 15,
-                temperature: 44,
-                humidity: 64,
-                lux: 2400,
-                date: '2024-08-01 12:14:00'
-            },
-            {
-                id: 16,
-                temperature: 45,
-                humidity: 65,
-                lux: 2500,
-                date: '2024-08-02 12:15:00'
-            },
-            {
-                id: 17,
-                temperature: 46,
-                humidity: 66,
-                lux: 2600,
-                date: '2024-08-02 12:16:00'
-            }
-        ]
+        data: []
     }
 ]
+
+export const useDataSensorData = () => {
+    const [data, setData] = useState([]);
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const result = await axios.get('http://localhost:8081/data1');
+          const dataSensor = result.data.map((item) => ({
+            id: item.id,
+            temperature: item.temperature,
+            humidity: item.humidity,
+            lux: item.lux,
+            date: item.date,
+          }));
+          setData(dataSensor);
+          DataSensorData[1].data = dataSensor; // Update the exported constant
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+  
+      fetchData();
+      
+    }, []);
+  
+    return data;
+  };
 
 export default DataSensorData

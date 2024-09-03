@@ -1,96 +1,61 @@
-import React from 'react'
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const ActionHistoryData = [
-    {
-        column: 
-        [
-            {
-                name: 'id',
-                selector: row => row.id,
-                sortable: true
-            },
-            {
-                name: 'Thiết bị',
-                selector: row => row.device,
-                sortable: true
-            },
-            {
-                name: 'Hành động',
-                selector: row => row.action,
-                sortable: true
-            },
-            {
-                name: 'Thời gian',
-                selector: row => row.date,
-                sortable: true
-            },
-        ],
-    },
-    {
-        data:
-        [
-            {
-                id: 1,
-                device: 'Đèn',
-                action: 'Bật',
-                date: '2024-08-01 12:00:00'
-            },
-            {
-                id: 2,
-                device: 'Đèn',
-                action: 'Tắt',
-                date: '2024-08-01 12:01:00'
-            },
-            {
-                id: 3,
-                device: 'Điều hoà',
-                action: 'Bật',
-                date: '2024-08-01 12:02:00'
-            },
-            {
-                id: 4,
-                device: 'Quạt',
-                action: 'Bật',
-                date: '2024-08-01 12:03:00'
-            },
-            {
-                id: 5,
-                device: 'Điều hoà',
-                action: 'Tắt',
-                date: '2024-08-01 12:04:00'
-            },
-            {
-                id: 6,
-                device: 'Quạt',
-                action: 'Tắt',
-                date: '2024-08-01 12:05:00'
-            },
-            {
-                id: 7,
-                device: 'Đèn',
-                action: 'Bật',
-                date: '2024-08-01 12:06:00'
-            },
-            {
-                id: 8,
-                device: 'Đèn',
-                action: 'Tắt',
-                date: '2024-08-01 12:07:00'
-            },
-            {
-                id: 9,
-                device: 'Quạt',
-                action: 'Bật',
-                date: '2024-08-02 12:08:00'
-            },
-            {
-                id: 10,
-                device: 'Quạt',
-                action: 'Tắt',
-                date: '2024-08-02 12:30:00'
-            },
-        ]
-    }
-]
+  {
+    column: [
+      {
+        name: 'ID',
+        selector: row => row.id,
+        sortable: true
+      },
+      {
+        name: 'Thiết bị',
+        selector: row => row.device,
+        sortable: true
+      },
+      {
+        name: 'Hành động',
+        selector: row => row.action,
+        sortable: true
+      },
+      {
+        name: 'Thời gian',
+        selector: row => row.date,
+        sortable: true
+      },
+    ],
+  },
+  {
+    data: []
+  }
+];
 
-export default ActionHistoryData
+export const useActionHistoryData = () => {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await axios.get('http://localhost:8081/data2');
+        const actionData = result.data.map((item) => ({
+          id: item.id,
+          device: item.device,
+          action: item.action,
+          date: item.date
+        }));
+        setData(actionData);
+        ActionHistoryData[1].data = actionData; // Update the exported constant
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+    
+  }, []);
+
+  return data;
+};
+
+export default ActionHistoryData;

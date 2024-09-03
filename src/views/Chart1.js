@@ -5,7 +5,7 @@ function Chart1() {
     <>
      <CChartLine
               className="mt-3 mx-3"
-              style={{ height: "70px" }}
+              style={{ height: "70px"}}
               data={{
                 labels: ["", "", "", "", "", "", ""],
                 datasets: [

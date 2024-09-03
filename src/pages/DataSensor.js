@@ -1,13 +1,17 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { CHeader, CContainer } from "@coreui/react";
 import DataTable from 'react-data-table-component'
 import { CiSearch } from "react-icons/ci";
-import DataSensorData from "../data/DataSensorData"; 
+import DataSensorData, {useDataSensorData} from "../data/DataSensorData"; 
 
 function DataSensor() {
-  const data = DataSensorData[1].data;
+  const data = useDataSensorData();
   const [record, setRecord] = React.useState(data);
   const [dateFilter, setDateFilter] = React.useState("");
+
+  useEffect(() => {
+    setRecord(data);
+  }, [data])
 
   function handleFilter(e) {
     const value = data.filter((row) =>{
