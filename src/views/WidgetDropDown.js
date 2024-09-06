@@ -45,12 +45,11 @@ const getTemperatureColor = (temperature) => {
     return `rgb(${redComponent}, ${greenComponent}, ${blueComponent})`;
 };
 
+
+
   
 const WidgetDropDown = (props) => {
-
-  const [temp, setTemp] = useState(24);
-  const [humidity, setHumidity] = useState(0);
-  const [lux, setLux] = useState(500);
+  const { temp, humidity, lux } = props;
 
   return (
     <CRow className={props.className} xs={{ gutter: 4 }}>
@@ -67,12 +66,12 @@ const WidgetDropDown = (props) => {
             </>
           }
           action={
-            <FaTemperatureEmpty className="temp" onClick={() => setTemp(temp + 5)} />
+            <FaTemperatureEmpty className="temp" />
             // <button className="btn btn-outline-black mr-0" onClick={() => setTemp(temp + 1)}>+</button>
           }
           title="Nhiệt độ"
           chart={
-            <Chart1 />
+            <Chart1 chartData={props.chartData}/>
           }
         />
       </CCol>
@@ -91,10 +90,10 @@ const WidgetDropDown = (props) => {
           }
           title="Độ ẩm"
           action={
-            <WiHumidity className="humi" onClick={() => setHumidity(humidity + 5)}>+</WiHumidity>
+            <WiHumidity className="humi"/>
           }
           chart={
-            <Chart2/>
+            <Chart2 chartData={props.chartData}/>
           }
         />
       </CCol>
@@ -112,10 +111,10 @@ const WidgetDropDown = (props) => {
           }
           title="Độ sáng"
           action={
-            <CiBrightnessDown className="lux" onClick={() => setLux(lux + 50)}>+</CiBrightnessDown>
+            <CiBrightnessDown className="lux"/>
           }
           chart={
-            <Chart3/>
+            <Chart3 chartData={props.chartData}/>
           }
         />
       </CCol>

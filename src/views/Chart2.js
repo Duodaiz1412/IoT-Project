@@ -1,6 +1,8 @@
 import React from 'react'
 import { CChartLine } from "@coreui/react-chartjs";
-function Chart2() {
+
+const Chart2 = (props) => {
+  const humidity = props.chartData.humidity.reverse();
   return (
     <>
      <CChartLine
@@ -15,7 +17,7 @@ function Chart2() {
                     backgroundColor: "transparent",
                     borderColor: "rgba(255,255,255,.55)",
                     // pointBackgroundColor: getStyle('--cui-primary'),
-                    data: [65, 59, 65, 65, 65, 65, 65],
+                    data: humidity,
                   },
                 ],
               }}
@@ -40,8 +42,8 @@ function Chart2() {
                     },
                   },
                   y: {
-                    min: 30,
-                    max: 89,
+                    min: 0,
+                    max: 100,
                     display: false,
                     grid: {
                       display: false,

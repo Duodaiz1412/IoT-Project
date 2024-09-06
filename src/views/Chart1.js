@@ -1,6 +1,10 @@
 import React from 'react'
 import {CChartLine} from '@coreui/react-chartjs'
-function Chart1() {
+
+
+const Chart1 = (props) => {
+  const temperature = props.chartData.temperature.reverse();
+  
   return (
     <>
      <CChartLine
@@ -13,8 +17,7 @@ function Chart1() {
                     label: "Nhiệt độ",
                     backgroundColor: "transparent",
                     borderColor: "rgba(255,255,255,.55)",
-                    // pointBackgroundColor: getStyle('--cui-primary'),
-                    data: [65, 59, 65, 65, 65, 65, 65],
+                    data: temperature,
                   },
                 ],
               }}
@@ -39,8 +42,8 @@ function Chart1() {
                     },
                   },
                   y: {
-                    min: 30,
-                    max: 89,
+                    min: 0,
+                    max: 60,
                     display: false,
                     grid: {
                       display: false,

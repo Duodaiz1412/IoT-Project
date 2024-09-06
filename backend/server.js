@@ -82,7 +82,7 @@ client.on("message", (topic, message) => {
 
 // Get status data from ESP32
 app.get("/status", (req, res) => {
-  db.query("SELECT fan, light, ac FROM data_sensor ORDER BY id DESC LIMIT 1;", (err, result) => {
+  db.query("SELECT fan, light, ac, temperature, humidity, lux FROM data_sensor ORDER BY id DESC LIMIT 7;", (err, result) => {
     if (err) {
       console.error("Error executing SQL query:", err);
       return res.status(500).json({ error: "Error executing SQL query" });
@@ -93,12 +93,16 @@ app.get("/status", (req, res) => {
         fan: row.fan,
         light: row.light,
         ac: row.ac,
+        temperature: row.temperature,
+        humidity: row.humidity,
+        lux: row.lux,
       };
     });
 
     return res.json(data);
   })
 });
+
 
 // Get data from the database for data sensor
 app.get("/data1", (req, res) => {

@@ -20,6 +20,15 @@ function Dashboard() {
   const [lightStatus, setLightStatus] = useState(false);
   const [acStatus, setAcStatus] = useState(false);
 
+  const [temperature, setTemperature] = useState(27);
+  const [humidity, setHumidity] = useState(50);
+  const [lux, setLux] = useState(300);
+  const [chartData, setChartData] = useState({
+    temperature: [],
+    humidity: [],
+    lux: [],
+  })
+
   const fetchData = async () => {
     try {
       const res = await axios.get("http://localhost:8081/status");
@@ -27,14 +36,35 @@ function Dashboard() {
       setFanStatus(res.data[0].fan === 1);
       setLightStatus(res.data[0].light === 1);
       setAcStatus(res.data[0].ac === 1);
+      setTemperature(res.data[0].temperature);
+      setHumidity(res.data[0].humidity);
+      setLux(res.data[0].lux);
+      
+      const tempData = res.data.map((item) => item.temperature);
+      const humidityData = res.data.map((item) => item.humidity);
+      const luxData = res.data.map((item) => item.lux);
+
+      setChartData({
+        temperature: tempData,
+        humidity: humidityData,
+        lux: luxData,
+      })
+
     } catch (error) {
       console.error("Error fetching status:", error);
     }
   };
 
   useEffect(() => {
+    console.log("set chartData: ", chartData);
+  }, [chartData]);
+
+  useEffect(() => {
     fetchData(); // Fetch immediately on mount
-  }, []);
+    const interval = setInterval(fetchData, 3000); // Fetch every 3 seconds
+    return () => clearInterval(interval); // Cleanup interval on unmount
+  }, []); // Empty array to ensure it only runs on mount
+  
 
   const [loading, setLoading] = useState({
     fan: false,
@@ -67,7 +97,7 @@ function Dashboard() {
       setLoading((prev) => ({ ...prev, [device]: false }));
     }
   };
-
+  
   return (
     <>
       {/* Header */}
@@ -80,19 +110,19 @@ function Dashboard() {
       </CHeader>
 
       {/* Body */}
-      <WidgetDropDown className="mb-4" />
+      <WidgetDropDown className="mb-4" temp={temperature} humidity={humidity} lux={lux} chartData={chartData}/>
       <CCardBody>
         <CRow>
           <CCol xs={8}>
             <Line
               className="rounded border border-green bg-white"
               data={{
-                labels: ["", "", "", "", "", ""],
+                labels: ["", "", "", "", "", "", ""],
                 datasets: [
                   {
                     type: "bar",
                     label: "Nhiệt độ",
-                    data: [29, 30, 31, 32, 29, 28],
+                    data: chartData.temperature,
                     fill: true,
                     backgroundColor: "rgba(255, 99, 132, 0.2)",
                     borderColor: "rgba(255, 99, 132, 1)",
@@ -101,7 +131,7 @@ function Dashboard() {
                   {
                     type: "bar",
                     label: "Độ ẩm",
-                    data: [50, 51, 52, 53, 50, 49],
+                    data: chartData.humidity,
                     fill: true,
                     backgroundColor: "rgba(54, 162, 235, 0.2)",
                     yAxisID: "y", 
@@ -109,9 +139,7 @@ function Dashboard() {
                   {
                     yAxisID: "y1",
                     label: "Ánh sáng",
-                    data: [
-                      1000, 1100, 1200, 1300, 1100, 800
-                    ],
+                    data: chartData.lux,
                     borderColor: "#FF6A6A",
                     fill: false,
                     
@@ -132,6 +160,8 @@ function Dashboard() {
                     type: 'linear',
                     display: true,
                     position: 'right',
+                    min: 0,
+                    max: 1500,
                     grid: {
                       drawOnChartArea: false,
                     },

@@ -28,7 +28,7 @@ const DataSensorData = [
                 name: 'Thời gian',
                 selector: row => row.date,
                 sortable: true
-            }
+            },
         ]
     },
     {

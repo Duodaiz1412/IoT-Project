@@ -1,7 +1,9 @@
 import React from 'react'
 import { CChartLine } from "@coreui/react-chartjs";
 
-function Chart3() {
+const Chart3 = (props) => {
+  const lux = props.chartData.lux.reverse();
+
   return (
     <>
       <CChartLine
@@ -15,8 +17,7 @@ function Chart3() {
                     label: "Độ sáng",
                     backgroundColor: "transparent",
                     borderColor: "rgba(255,255,255,.55)",
-                    // pointBackgroundColor: getStyle('--cui-primary'),
-                    data: [800, 900, 1000, 1000, 900, 800, 1100],
+                    data: lux,
                   },
                 ],
               }}
@@ -41,7 +42,7 @@ function Chart3() {
                     },
                   },
                   y: {
-                    min: 500,
+                    min: 0,
                     max: 1500,
                     display: false,
                     grid: {
