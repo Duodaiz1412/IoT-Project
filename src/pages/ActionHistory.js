@@ -1,59 +1,67 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { CHeader, CContainer } from "@coreui/react";
 import DataTable from 'react-data-table-component';
 import ActionHistoryData,  { useActionHistoryData } from "../data/ActionHistoryData";
 import { CiSearch } from "react-icons/ci";
+import axios from "axios";
+
+// Debounce function to delay calling the API
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 function ActionHistory() {
   const data = useActionHistoryData();
   const [record, setRecord] = React.useState(data);
-  const [deviceFilter, setDeviceFilter] = React.useState("");
-  const [dateFilter, setDateFilter] = React.useState("");
-  console.log(data)
-  console.log(record)
+  const [dateFilter, setDateFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deviceFilter, setDeviceFilter] = useState("");
+  const [columns, setColumns] = useState(ActionHistoryData[0].column);
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300); // 300ms debounce delay
 
   useEffect(() => {
-    setRecord(data);
-  }, [data]);
+    fetchData({
+      searchTerm: debouncedSearchTerm,
+      dateFilter,
+      deviceFilter,
+    })
+  }, [debouncedSearchTerm, dateFilter, deviceFilter]);
 
+  const fetchData = async (filters = {}) => {
+    try {
+      const response = await axios.get("http://localhost:8081/datasearch2", {
+        params: filters,
+      });
+      setRecord(response.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
-  function handleFilter(e) {
-    const value = e.target.value.toLowerCase();
-    const filteredData = data.filter((row) => {
-      const matchesDevice = deviceFilter ? row.device.toLowerCase().includes(deviceFilter) : true;
-      const matchesSearch =
-        row.id.toString().includes(value) ||
-        row.device.toLowerCase().includes(value) ||
-        row.action.toLowerCase().includes(value) ||
-        row.date.toString().includes(value);
+  const handleSearchTermChange = (e) => {
+    setSearchTerm(e.target.value); // Search term will be debounced
+  };
 
-      return matchesDevice && matchesSearch;
-    });
-    setRecord(filteredData);
-  }
+  const handleDeviceFilterChange = (e) => {
+    setDeviceFilter(e.target.value);
+  };
 
-  function handleDeviceFilter(e) {
-    const selectedDevice = e.target.value.toLowerCase();
-    setDeviceFilter(selectedDevice);
-
-    const filteredData = data.filter((row) => {
-      const matchesDevice = selectedDevice ? row.device.toLowerCase().includes(selectedDevice) : true;
-      return matchesDevice;
-    });
-    setRecord(filteredData);
-  }
-
-  function handleDateFilter(e) {
-    const selectedDate = e.target.value;
-    setDateFilter(selectedDate);
-
-    const filteredData = data.filter((row) => {
-      const matchesDevice = deviceFilter ? row.device.toLowerCase().includes(deviceFilter) : true;
-      const matchesDate = selectedDate ? row.date.startsWith(selectedDate) : true;
-      return matchesDevice && matchesDate;
-    });
-    setRecord(filteredData);
-  }
+  const handleDateFilterChange = (e) => {
+    setDateFilter(e.target.value);
+  };
 
   return (
     <>
@@ -71,7 +79,7 @@ function ActionHistory() {
         <select
           className="form-select me-3"
           style={{ maxWidth: "150px" }}
-          onChange={handleDeviceFilter}
+          onChange={handleDeviceFilterChange}
           defaultValue=""
         >
           <option value="">Tất cả thiết bị</option>
@@ -88,7 +96,7 @@ function ActionHistory() {
           <input 
             type="text" 
             className="form-control" 
-            onChange={handleFilter} 
+            onChange={handleSearchTermChange} 
             placeholder="Tìm kiếm..." 
           />
         </div>
@@ -99,11 +107,11 @@ function ActionHistory() {
           type="date"
           className="form-control me-3"
           style={{ maxWidth: "200px" }}
-          onChange={handleDateFilter}
+          onChange={handleDateFilterChange}
         />
 
       <DataTable 
-        columns={ActionHistoryData[0].column}
+        columns={columns}
         data={record}
         pagination
         fixedHeader

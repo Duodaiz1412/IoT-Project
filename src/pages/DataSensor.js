@@ -41,7 +41,7 @@ function DataSensor() {
 
   const fetchData = async (filters = {}) => {
     try {
-      const response = await axios.get("http://localhost:8081/data3", {
+      const response = await axios.get("http://localhost:8081/datasearch1", {
         params: filters,
       });
       setRecord(response.data);

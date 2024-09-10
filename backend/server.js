@@ -272,7 +272,7 @@ app.post("/actiondata", async (req, res) => {
   }
 });
 
-app.get("/data3", (req, res) => {
+app.get("/datasearch1", (req, res) => {
   const { searchTerm, dateFilter, parameterFilter } = req.query;
   const sql = "SELECT * FROM data_sensor ORDER BY id DESC";
   db.query(sql, (err, result) => {
@@ -363,6 +363,73 @@ app.get("/data3", (req, res) => {
     res.json(filteredData);
   });
 });
+
+app.get("/datasearch2", (req, res) => {
+  const { searchTerm, dateFilter, deviceFilter } = req.query;
+
+  const sql = "SELECT * FROM action_history ORDER BY id DESC";
+  
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error executing SQL query:", err);
+      return res.status(500).json({ error: "Error executing SQL query" });
+    }
+
+    const data = result.map((row) => {
+      const dateObj = new Date(row.date);
+      
+      const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+        dateObj.getUTCMonth() + 1
+      ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+        2,
+        "0"
+      )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+        dateObj.getUTCMinutes()
+      ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
+
+      return {
+        id: row.id,
+        device: row.device,
+        action: row.action,
+        date: formattedDate,
+      };
+    });
+    
+    let filteredData = data;
+    if(deviceFilter){
+      filteredData = filteredData.filter((row) =>{
+        const deviceStr = row.device != null ? row.device.toString().toLowerCase() : "";
+        const device = deviceFilter != null ? deviceFilter.toString().toLowerCase() : "";
+        return deviceStr.includes(device)
+      })
+    }
+
+    // Apply date filter
+    if (dateFilter) {
+      filteredData = filteredData.filter((row) =>
+        row.date.startsWith(dateFilter)
+      );
+    }
+
+    if(searchTerm){
+      if (searchTerm) {
+        filteredData = filteredData.filter((row) => {
+          const deviceStr = row.device != null ? row.device.toString() : "";
+          const actionStr = row.action != null ? row.action.toString() : "";
+          const dateStr = row.date != null ? row.date : "";
+  
+          return (
+            deviceStr.includes(searchTerm) ||
+            actionStr.includes(searchTerm) ||
+            dateStr.includes(searchTerm)
+          );
+        });
+      }
+    }
+
+    res.json(filteredData);
+  });
+})
 
 
 app.listen(PORT, () => {
