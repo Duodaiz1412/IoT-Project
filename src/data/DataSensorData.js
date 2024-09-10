@@ -6,7 +6,7 @@ const DataSensorData = [
         column: [
             {
                 name: 'id',
-                selector: row => row.id,
+                selector: (row) => row.id,
                 sortable: true
             },
             {
@@ -56,9 +56,8 @@ export const useDataSensorData = () => {
           console.error('Error fetching data:', error);
         }
       };
-  
-      fetchData();
       
+      fetchData();
     }, []);
   
     return data;

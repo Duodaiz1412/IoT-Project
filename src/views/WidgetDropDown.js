@@ -6,9 +6,9 @@ import { FaTemperatureEmpty } from "react-icons/fa6";
 import { WiHumidity } from "react-icons/wi";
 import { CiBrightnessDown } from "react-icons/ci";
 
-import Chart1 from "./Chart1";
-import Chart2 from "./Chart2";
-import Chart3 from "./Chart3";
+import Chart1 from "./TempChart";
+import Chart2 from "./HumidityChart";
+import Chart3 from "./LuxChart";
 
 const getTemperatureColor = (temperature) => {
     // Clamp the temperature value between 0 and 50 for the sake of simplicity
@@ -37,13 +37,14 @@ const getTemperatureColor = (temperature) => {
     const clampedLux = Math.max(100, Math.min(lux, 700));
 
     // Calculate the red and green components based on lux
-    const redComponent = Math.round(204 - (clampedLux - 100) / 600 * (204 - 153)); // from 204 to 153
-    const greenComponent = Math.round(153 + (clampedLux - 100) / 600 * (255 - 153)); // from 153 to 255
-    const blueComponent = 0; // Keep blue component constant to achieve yellow shades
+    const redComponent = Math.round(153 + (clampedLux - 100) / 600 * (255 - 153)); // from 153 (gray) to 255 (light yellow)
+    const greenComponent = Math.round(153 + (clampedLux - 100) / 600 * (255 - 153)); // from 153 (gray) to 255 (light yellow)
+    const blueComponent = Math.round(153 - (clampedLux - 100) / 600 * 153); // from 153 (gray) to 0 (yellow)
 
     // Return the RGB color string with the calculated components
     return `rgb(${redComponent}, ${greenComponent}, ${blueComponent})`;
 };
+
 
 
 

@@ -36,11 +36,14 @@ const db = mysql.createConnection({
 // Format time from Date() to "YY:MM:DD hh:mm:ss"
 function getFormattedTime() {
   const now = new Date();
-  return `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(
-    now.getDate()
-  ).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes()
-  ).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+  return `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}/${String(now.getDate()).padStart(2, "0")} ${String(
+    now.getHours()
+  ).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(
+    now.getSeconds()
+  ).padStart(2, "0")}`;
 }
 
 client.on("connect", () => {
@@ -61,14 +64,25 @@ client.on("message", (topic, message) => {
       return;
     }
 
-    if (data.temperature !== undefined) data.temperature = parseFloat(data.temperature.toFixed(1));
-    if (data.humidity !== undefined) data.humidity = parseFloat(data.humidity.toFixed(1));
+    if (data.temperature !== undefined)
+      data.temperature = parseFloat(data.temperature.toFixed(1));
+    if (data.humidity !== undefined)
+      data.humidity = parseFloat(data.humidity.toFixed(1));
     if (data.lux !== undefined) data.lux = parseFloat(data.lux.toFixed(1));
 
     data.date = getFormattedTime();
 
-    const sql = "INSERT INTO data_sensor (temperature, humidity, lux, date, fan, light, ac) VALUES (?)";
-    const values = [data.temperature, data.humidity, data.lux, data.date, data.fan, data.light, data.ac];
+    const sql =
+      "INSERT INTO data_sensor (temperature, humidity, lux, date, fan, light, ac) VALUES (?)";
+    const values = [
+      data.temperature,
+      data.humidity,
+      data.lux,
+      data.date,
+      data.fan,
+      data.light,
+      data.ac,
+    ];
 
     db.query(sql, [values], (err) => {
       if (err) {
@@ -82,27 +96,29 @@ client.on("message", (topic, message) => {
 
 // Get status data from ESP32
 app.get("/status", (req, res) => {
-  db.query("SELECT fan, light, ac, temperature, humidity, lux FROM data_sensor ORDER BY id DESC LIMIT 7;", (err, result) => {
-    if (err) {
-      console.error("Error executing SQL query:", err);
-      return res.status(500).json({ error: "Error executing SQL query" });
+  db.query(
+    "SELECT fan, light, ac, temperature, humidity, lux FROM data_sensor ORDER BY id DESC LIMIT 7;",
+    (err, result) => {
+      if (err) {
+        console.error("Error executing SQL query:", err);
+        return res.status(500).json({ error: "Error executing SQL query" });
+      }
+
+      const data = result.map((row) => {
+        return {
+          fan: row.fan,
+          light: row.light,
+          ac: row.ac,
+          temperature: row.temperature,
+          humidity: row.humidity,
+          lux: row.lux,
+        };
+      });
+
+      return res.json(data);
     }
-
-    const data = result.map((row) => {
-      return {
-        fan: row.fan,
-        light: row.light,
-        ac: row.ac,
-        temperature: row.temperature,
-        humidity: row.humidity,
-        lux: row.lux,
-      };
-    });
-
-    return res.json(data);
-  })
+  );
 });
-
 
 // Get data from the database for data sensor
 app.get("/data1", (req, res) => {
@@ -186,16 +202,23 @@ app.post("/actiondata", async (req, res) => {
     client.publish(MQTT_REQUEST, JSON.stringify({ device, action }), (err) => {
       if (err) {
         console.error("Failed to send data to MQTT Broker:", err);
-        return res.status(500).json({ error: "Failed to send action data to MQTT" });
+        return res
+          .status(500)
+          .json({ error: "Failed to send action data to MQTT" });
       }
-      console.log("Action data sent to MQTT:", JSON.stringify({ device, action }));
+      console.log(
+        "Action data sent to MQTT:",
+        JSON.stringify({ device, action })
+      );
     });
 
     const timeout = setTimeout(() => {
       console.error("Timeout waiting for MQTT response");
       client.unsubscribe(MQTT_UPDATE);
       client.removeListener("message", handleMessage);
-      return res.status(500).json({ error: "Timeout waiting for MQTT response" });
+      return res
+        .status(500)
+        .json({ error: "Timeout waiting for MQTT response" });
     }, 10000); // 10 seconds timeout
 
     const handleMessage = (topic, message) => {
@@ -208,23 +231,37 @@ app.post("/actiondata", async (req, res) => {
           const data = JSON.parse(message);
           const { device: responseDevice, action: responseAction } = data;
           if (responseDevice === device && responseAction === action) {
-            const dev = device === "light" ? "Đèn" : device === "fan" ? "Quạt" : "Điều hoà";
+            const dev =
+              device === "light"
+                ? "Đèn"
+                : device === "fan"
+                ? "Quạt"
+                : "Điều hoà";
             const act = action === "on" ? "Bật" : "Tắt";
-            const sql = "INSERT INTO action_history (device, action, date) VALUES (?)";
+            const sql =
+              "INSERT INTO action_history (device, action, date) VALUES (?)";
             const values = [dev, act, getFormattedTime()];
 
             db.query(sql, [values], (err) => {
               if (err) {
-                console.error("Error inserting action history into database:", err);
+                console.error(
+                  "Error inserting action history into database:",
+                  err
+                );
               } else {
-                console.log("Action history inserted into database:", { dev, act });
+                console.log("Action history inserted into database:", {
+                  dev,
+                  act,
+                });
               }
             });
             return res.json({ device: responseDevice, action: responseAction });
           }
         } catch (error) {
           console.error("Failed to parse MQTT response:", error);
-          return res.status(500).json({ error: "Failed to parse MQTT response" });
+          return res
+            .status(500)
+            .json({ error: "Failed to parse MQTT response" });
         }
       }
     };
@@ -234,6 +271,99 @@ app.post("/actiondata", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
+app.get("/data3", (req, res) => {
+  const { searchTerm, dateFilter, parameterFilter } = req.query;
+  const sql = "SELECT * FROM data_sensor ORDER BY id DESC";
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error executing SQL query:", err);
+      return res.status(500).json({ error: "Error executing SQL query" });
+    }
+
+    const data = result.map((row) => {
+      const dateObj = new Date(row.date);
+      const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+        dateObj.getUTCMonth() + 1
+      ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+        2,
+        "0"
+      )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+        dateObj.getUTCMinutes()
+      ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
+
+      return {
+        id: row.id,
+        temperature: row.temperature,
+        humidity: row.humidity,
+        lux: row.lux,
+        date: formattedDate,
+      };
+    });
+
+    let filteredData = data;
+
+    // Apply date filter
+    if (dateFilter) {
+      filteredData = filteredData.filter((row) =>
+        row.date.startsWith(dateFilter)
+      );
+    }
+
+    // Apply parameter filter
+    if (parameterFilter) {
+      if (parameterFilter === "nhiệt độ") {
+        filteredData = filteredData.map(({ id, temperature, date }) => ({
+          id,
+          temperature,
+          date,
+        }));
+      } else if (parameterFilter === "độ ẩm") {
+        filteredData = filteredData.map(({ id, humidity, date }) => ({
+          id,
+          humidity,
+          date,
+        }));
+      } else if (parameterFilter === "ánh sáng") {
+        filteredData = filteredData.map(({ id, lux, date }) => ({
+          id,
+          lux,
+          date,
+        }));
+      } else if (parameterFilter === "all") {
+        filteredData = filteredData.map(
+          ({ id, temperature, humidity, lux, date }) => ({
+            id,
+            temperature,
+            humidity,
+            lux,
+            date,
+          })
+        );
+      }
+    }
+
+    // Apply search filter
+    if (searchTerm) {
+      filteredData = filteredData.filter((row) => {
+        const tempStr = row.temperature != null ? row.temperature.toString() : "";
+        const humStr = row.humidity != null ? row.humidity.toString() : "";
+        const luxStr = row.lux != null ? row.lux.toString() : "";
+        const dateStr = row.date != null ? row.date : "";
+
+        return (
+          tempStr.includes(searchTerm) ||
+          humStr.includes(searchTerm) ||
+          luxStr.includes(searchTerm) ||
+          dateStr.includes(searchTerm)
+        );
+      });
+    }
+
+    res.json(filteredData);
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
