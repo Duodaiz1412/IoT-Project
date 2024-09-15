@@ -1,7 +1,6 @@
 import React, { Suspense, useEffect } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { CSpinner } from "@coreui/react";
-import AppSidebar from "./components/AppSidebar";
 import "./styles/style.scss";
 
 

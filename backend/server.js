@@ -346,7 +346,8 @@ app.get("/datasearch1", (req, res) => {
     // Apply search filter
     if (searchTerm) {
       filteredData = filteredData.filter((row) => {
-        const tempStr = row.temperature != null ? row.temperature.toString() : "";
+        const tempStr =
+          row.temperature != null ? row.temperature.toString() : "";
         const humStr = row.humidity != null ? row.humidity.toString() : "";
         const luxStr = row.lux != null ? row.lux.toString() : "";
         const dateStr = row.date != null ? row.date : "";
@@ -368,7 +369,7 @@ app.get("/datasearch2", (req, res) => {
   const { searchTerm, dateFilter, deviceFilter } = req.query;
 
   const sql = "SELECT * FROM action_history ORDER BY id DESC";
-  
+
   db.query(sql, (err, result) => {
     if (err) {
       console.error("Error executing SQL query:", err);
@@ -377,7 +378,7 @@ app.get("/datasearch2", (req, res) => {
 
     const data = result.map((row) => {
       const dateObj = new Date(row.date);
-      
+
       const formattedDate = `${dateObj.getUTCFullYear()}-${String(
         dateObj.getUTCMonth() + 1
       ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
@@ -394,14 +395,16 @@ app.get("/datasearch2", (req, res) => {
         date: formattedDate,
       };
     });
-    
+
     let filteredData = data;
-    if(deviceFilter){
-      filteredData = filteredData.filter((row) =>{
-        const deviceStr = row.device != null ? row.device.toString().toLowerCase() : "";
-        const device = deviceFilter != null ? deviceFilter.toString().toLowerCase() : "";
-        return deviceStr.includes(device)
-      })
+    if (deviceFilter) {
+      filteredData = filteredData.filter((row) => {
+        const deviceStr =
+          row.device != null ? row.device.toString().toLowerCase() : "";
+        const device =
+          deviceFilter != null ? deviceFilter.toString().toLowerCase() : "";
+        return deviceStr.includes(device);
+      });
     }
 
     // Apply date filter
@@ -411,17 +414,20 @@ app.get("/datasearch2", (req, res) => {
       );
     }
 
-    if(searchTerm){
+    if (searchTerm) {
       if (searchTerm) {
         filteredData = filteredData.filter((row) => {
-          const deviceStr = row.device != null ? row.device.toString() : "";
-          const actionStr = row.action != null ? row.action.toString() : "";
+          const search = searchTerm.toString().toLowerCase();
+          const deviceStr =
+            row.device != null ? row.device.toString().toLowerCase() : "";
+          const actionStr =
+            row.action != null ? row.action.toString().toLowerCase() : "";
           const dateStr = row.date != null ? row.date : "";
-  
+
           return (
-            deviceStr.includes(searchTerm) ||
-            actionStr.includes(searchTerm) ||
-            dateStr.includes(searchTerm)
+            deviceStr.includes(search) ||
+            actionStr.includes(search) ||
+            dateStr.includes(search)
           );
         });
       }
@@ -429,8 +435,98 @@ app.get("/datasearch2", (req, res) => {
 
     res.json(filteredData);
   });
-})
+});
 
+app.get("/sort1", (req, res) => {
+  const { column, sort, parameterFilter } = req.query;
+  
+  const sql = `SELECT * FROM data_sensor ORDER BY ${column} ${sort}`;
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error executing SQL query:", err);
+      return res.status(500).json({ error: "Error executing SQL query" });
+    } else {
+      const data = result.map((row) => {
+        const dateObj = new Date(row.date);
+        const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+          dateObj.getUTCMonth() + 1
+        ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+          2,
+          "0"
+        )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+          dateObj.getUTCMinutes()
+        ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(
+          2,
+          "0"
+        )}`;
+
+        if (parameterFilter === "nhiệt độ") {
+          return {
+            id: row.id,
+            temperature: row.temperature,
+            date: formattedDate,
+          };
+        } else if (parameterFilter === "độ ẩm") {
+          return {
+            id: row.id,
+            humidity: row.humidity,
+            date: formattedDate,
+          };
+        } else if (parameterFilter === "ánh sáng") {
+          return {
+            id: row.id,
+            lux: row.lux,
+            date: formattedDate,
+          };
+        } else if (parameterFilter === "all") {
+          return {
+            id: row.id,
+            temperature: row.temperature,
+            humidity: row.humidity,
+            lux: row.lux,
+            date: formattedDate,
+          };
+        }
+      });
+      res.json(data);
+    }
+  });
+});
+
+app.get("/sort2", (req, res) => {
+  const { column, sort } = req.query;
+  const sql = `SELECT * FROM action_history ORDER BY ${column} ${sort}`;
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error executing SQL query:", err);
+      return res.status(500).json({ error: "Error executing SQL query" });
+    } else {
+      const data = result.map((row) => {
+        const dateObj = new Date(row.date);
+        const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+          dateObj.getUTCMonth() + 1
+        ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+          2,
+          "0"
+        )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+          dateObj.getUTCMinutes()
+        ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(
+          2,
+          "0"
+        )}`;
+
+        return {
+          id: row.id,
+          device: row.device,
+          action: row.action,
+          date: formattedDate,
+        };
+      });
+      res.json(data);
+    }
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

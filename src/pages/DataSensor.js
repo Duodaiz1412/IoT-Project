@@ -5,6 +5,12 @@ import { CiSearch } from "react-icons/ci";
 import axios from "axios";
 import DataSensorData from "../data/DataSensorData";
 
+import {
+  TiArrowSortedDown as SortDown,
+  TiArrowSortedUp as SortUp,
+  TiArrowUnsorted as UnSort,
+} from "react-icons/ti";
+
 // Debounce function to delay calling the API
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -27,9 +33,104 @@ function DataSensor() {
   const [dateFilter, setDateFilter] = useState("");
   const [parameterFilter, setParameterFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [columns, setColumns] = useState(DataSensorData[0].column);
+  const [sort, setSort] = useState("desc");
+  const [activeColumn, setActiveColumn] = useState(null); // Track the active column
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300); // 300ms debounce delay
+
+  useEffect(() => {}, [activeColumn, sort]);
+
+  const handleSort = (column) => {
+    const newSortOrder =
+        sort === "desc" ? "asc" : sort === "asc" ? "desc" : "desc";
+    setSort(newSortOrder);
+    setActiveColumn(column); // Set the column as active
+
+    const fetch = async () => {
+      try {
+        const response = await axios.get("http://localhost:8081/sort1", {
+          params: {
+            column,
+            parameterFilter,
+            sort: newSortOrder, // Send sort order (asc, desc, or all)
+          },
+        });
+        setRecord(response.data); // Update data with sorted results
+      } catch (error) {
+        console.error("Error fetching sorted data:", error);
+      }
+    };
+
+    fetch(); // Fetch sorted data from backend
+  };
+
+  const sortIcon = (column) => {
+    // Show the correct icon only for the active column
+    if (activeColumn === column) {
+      if (sort === "asc")
+        return <SortUp style={{ fontSize: "1rem", cursor: "pointer" }} />;
+      if (sort === "desc")
+        return <SortDown style={{ fontSize: "1rem", cursor: "pointer" }} />;
+    }
+    // Default icon for columns that aren't currently sorted
+    return <UnSort style={{ fontSize: "1rem", cursor: "pointer" }} />;
+  };
+
+  const columns = [
+    {
+      name: (
+        <>
+          ID
+          <span onClick={() => handleSort("id")}>{sortIcon("id")}</span>{" "}
+        </>
+      ),
+      selector: (row) => row.id,
+    },
+    {
+      name: (
+        <>
+          Nhiệt độ
+          <span onClick={() => handleSort("temperature")}>
+            {sortIcon("temperature")}
+          </span>{" "}
+        </>
+      ),
+      selector: (row) => row.temperature,
+    },
+    {
+      name: (
+        <>
+          Độ ẩm
+          <span onClick={() => handleSort("humidity")}>
+            {sortIcon("humidity")}
+          </span>{" "}
+        </>
+      ),
+      selector: (row) => row.humidity,
+    },
+    {
+      name: (
+        <>
+          Ánh sáng
+          <span onClick={() => handleSort("lux")}>
+            {sortIcon("lux")}
+          </span>{" "}
+        </>
+      ),
+      selector: (row) => row.lux,
+    },
+    {
+      name: (
+        <>
+          Thời gian
+          <span onClick={() => handleSort("date")}>
+            {sortIcon("date")}
+          </span>{" "}
+        </>
+      ),
+      selector: (row) => row.date,
+    },
+  ];
 
   useEffect(() => {
     fetchData({
@@ -75,7 +176,7 @@ function DataSensor() {
       <div className="mb-4 d-flex justify-content-center">
         <select
           className="form-select me-3"
-          style={{ maxWidth: "150px" }}
+          style={{ maxWidth: "160px" }}
           defaultValue="all"
           onChange={handleParameterFilterChange}
         >

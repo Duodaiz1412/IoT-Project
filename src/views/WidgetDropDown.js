@@ -54,6 +54,7 @@ const WidgetDropDown = (props) => {
 
   return (
     <CRow className={props.className} xs={{ gutter: 4 }}>
+      {/* Temperature */}
       <CCol xs="12" sm="6" md="4">
         <CWidgetStatsA
           style={{
@@ -66,9 +67,7 @@ const WidgetDropDown = (props) => {
               {temp} <span className="fs-8">°C</span>
             </>
           }
-          action={
-            <FaTemperatureEmpty className="temp" />
-            // <button className="btn btn-outline-black mr-0" onClick={() => setTemp(temp + 1)}>+</button>
+          action={<FaTemperatureEmpty className="temp" />
           }
           title="Nhiệt độ"
           chart={
@@ -76,6 +75,8 @@ const WidgetDropDown = (props) => {
           }
         />
       </CCol>
+
+      {/* Humidity */}
       <CCol xs="12" sm="6" md="4">
         <CWidgetStatsA
           style={{
@@ -83,7 +84,6 @@ const WidgetDropDown = (props) => {
             color: "#fff", // Ensure text is visible on darker backgrounds
             maxWidth: "100%",
           }}
-          // className="custom-widget"
           value={
             <>
               {humidity} <span className="fs-8">%</span>
@@ -98,6 +98,8 @@ const WidgetDropDown = (props) => {
           }
         />
       </CCol>
+
+      {/* Lux */}
       <CCol xs="12" sm="6" md="4">
         <CWidgetStatsA
           style={{

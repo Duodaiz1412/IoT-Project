@@ -117,16 +117,17 @@ function Dashboard() {
             <Line
               className="rounded border border-green bg-white"
               data={{
-                labels: ["", "", "", "", "", "", ""],
+                labels: ["30s", "25s", "20s", "15s", "10s", "5s", "Now"],
                 datasets: [
                   {
                     type: "bar",
                     label: "Nhiệt độ",
                     data: chartData.temperature,
                     fill: true,
-                    backgroundColor: "rgba(255, 99, 132, 0.2)",
+                    backgroundColor: "#FCDE70",
                     borderColor: "rgba(255, 99, 132, 1)",
-                    yAxisID: "y", 
+                    yAxisID: "y",
+                    order: 2,
                   },
                   {
                     type: "bar",
@@ -135,25 +136,38 @@ function Dashboard() {
                     fill: true,
                     backgroundColor: "rgba(54, 162, 235, 0.2)",
                     yAxisID: "y", 
+                    order: 3,
                   },
                   {
                     yAxisID: "y1",
                     label: "Ánh sáng",
+                    lineTension: 0.2,
                     data: chartData.lux,
+                    // data: [50, 700, 200, 300, 500, 800, 500],
                     borderColor: "#FF6A6A",
                     fill: false,
-                    
+                    order: 1,
                   },
                 ],
               }}
               options={{
                 scales: {
+                  x: {
+                    grid: {
+                      display: false,
+                    }
+                  },
                   y: {
                     type: 'linear',
                     display: true,
                     position: 'left',
+                    min: 0,
+                    max: 100,
                     ticks: {
                       beginAtZero: true,
+                    },
+                    grid: {
+                      display: false
                     },
                   },
                   y1: {
@@ -241,7 +255,7 @@ function Dashboard() {
             {/* AC */}
             <CCard
               className="rounded border border-gray mb-3 d-flex align-items-center justify-content-center"
-              style={{ height: "8rem", padding: 0 }}
+              style={{ height: "7.5rem", padding: 0 }}
             >
               <CButton
                 onClick={() => !loading.ac && handleAction("ac", acStatus ? "off" : "on")}

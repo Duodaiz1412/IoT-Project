@@ -7,22 +7,22 @@ const ActionHistoryData = [
       {
         name: 'ID',
         selector: row => row.id,
-        sortable: true
+        // sortable: true
       },
       {
         name: 'Thiết bị',
         selector: row => row.device,
-        sortable: true
+        // sortable: true
       },
       {
         name: 'Hành động',
         selector: row => row.action,
-        sortable: true
+        // sortable: true
       },
       {
         name: 'Thời gian',
         selector: row => row.date,
-        sortable: true
+        // sortable: true
       },
     ],
   },
@@ -52,10 +52,10 @@ export const useActionHistoryData = () => {
     };
 
     fetchData();
-    
+
   }, []);
 
   return data;
 };
 
-export default ActionHistoryData;
+export default ActionHistoryData; 
