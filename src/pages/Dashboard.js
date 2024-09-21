@@ -80,8 +80,7 @@ function Dashboard() {
     };
     try {
       const res = await axios.post('http://localhost:8081/actiondata', actionData);
-      console.log(res.data.action);
-      console.log(res.data.device);
+
       if (res.data.action === "on") {
         if (device === "fan") setFanStatus(true);
         if (device === "light") setLightStatus(true);

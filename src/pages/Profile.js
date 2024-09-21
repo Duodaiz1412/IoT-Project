@@ -1,6 +1,6 @@
 import React from "react";
 import { Container, Row, Col, Card, Button, Image } from "react-bootstrap";
-import { FaFacebook, FaGithub, FaYoutube } from "react-icons/fa";
+import { FaFacebook, FaGithub, FaYoutube, FaBook } from "react-icons/fa";
 
 const ProfilePage = () => {
   return (
@@ -33,9 +33,9 @@ const ProfilePage = () => {
             <Card.Body>
               <Card.Title>About This Project</Card.Title>
               <Card.Text>
-              Build an IoT system to monitor and control environmental parameters such as temperature, humidity, and light. 
-              The system also allows for controlling devices such as fans, air conditioners, 
-              and lights through a user-friendly interface.
+                Build an IoT system to monitor and control environmental parameters such as temperature, humidity, and light. 
+                The system also allows for controlling devices such as fans, air conditioners, 
+                and lights through a user-friendly interface.
               </Card.Text>
               <hr />
               <Row>
@@ -52,11 +52,11 @@ const ProfilePage = () => {
                   </p>
                 </Col>
                 <Col md={6}>
-                  <h5 >Social Media: </h5>
+                  <h5>Social Media & Resources:</h5>
                   <div className="d-block mb-2">
                     <Button
                       variant="primary"
-                      className="w-50 mb-2"
+                      className="w-100 mb-2"
                       href="https://www.facebook.com/profile.php?id=100013005340529"
                       target="_blank"
                     >
@@ -67,7 +67,7 @@ const ProfilePage = () => {
                   <div className="d-block mb-2">
                     <Button
                       variant="dark"
-                      className="w-50 mb-2"
+                      className="w-100 mb-2"
                       href="https://github.com/Dazkiz1412"
                       target="_blank"
                     >
@@ -78,11 +78,22 @@ const ProfilePage = () => {
                   <div className="d-block mb-2">
                     <Button
                       variant="danger"
-                      className="w-50 mb-2"
+                      className="w-100 mb-2"
                       href="https://www.youtube.com/@Teof4992"
                       target="_blank"
                     >
                       <FaYoutube className="me-2" /> YouTube
+                    </Button>
+                  </div>
+
+                  <div className="d-block mb-2">
+                    <Button
+                      variant="success"
+                      className="w-100 mb-2"
+                      href="http://localhost:8081/api-docs"
+                      target="_blank"
+                    >
+                      <FaBook className="me-2" /> API Docs
                     </Button>
                   </div>
                 </Col>

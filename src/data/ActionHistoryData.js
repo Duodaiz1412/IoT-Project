@@ -3,30 +3,6 @@ import axios from 'axios';
 
 const ActionHistoryData = [
   {
-    column: [
-      {
-        name: 'ID',
-        selector: row => row.id,
-        // sortable: true
-      },
-      {
-        name: 'Thiết bị',
-        selector: row => row.device,
-        // sortable: true
-      },
-      {
-        name: 'Hành động',
-        selector: row => row.action,
-        // sortable: true
-      },
-      {
-        name: 'Thời gian',
-        selector: row => row.date,
-        // sortable: true
-      },
-    ],
-  },
-  {
     data: []
   }
 ];

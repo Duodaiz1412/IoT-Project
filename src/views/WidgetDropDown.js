@@ -10,7 +10,7 @@ import Chart1 from "./TempChart";
 import Chart2 from "./HumidityChart";
 import Chart3 from "./LuxChart";
 
-const getTemperatureColor = (temperature) => {
+  const getTemperatureColor = (temperature) => {
     // Clamp the temperature value between 0 and 50 for the sake of simplicity
     const clampedTemp = Math.max(0, Math.min(temperature, 50))
   

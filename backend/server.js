@@ -2,6 +2,10 @@ const mysql = require("mysql");
 const express = require("express");
 const cors = require("cors");
 const mqtt = require("mqtt");
+const swagger = require("swagger-ui-express");
+const swaggerJSDoc = require("swagger-jsdoc");
+const YAML = require("yamljs");
+
 
 const app = express();
 const PORT = 8081;
@@ -497,7 +501,7 @@ app.get("/sort2", (req, res) => {
   const { column, sort } = req.query;
   const sql = `SELECT * FROM action_history ORDER BY ${column} ${sort}`;
 
-  db.query(sql, (err, result) => {
+  sql.query(sql, (err, result) => {
     if (err) {
       console.error("Error executing SQL query:", err);
       return res.status(500).json({ error: "Error executing SQL query" });
@@ -527,6 +531,25 @@ app.get("/sort2", (req, res) => {
     }
   });
 });
+
+// const option = {
+//   definition: {
+//     openapi: "3.0.0",
+//     info: {
+//       title: "IOT Project API",
+//       version: "1.0.0", 
+//       description: "An API for IOT Project",
+//     },
+//     servers: [
+//       {
+//         url: "http://localhost:8081 ",
+//       },
+//     ],
+//   },
+//   apis: ["../src/pages/*.js"],
+// };
+const swaggerDocument = YAML.load('./apidocs.yaml');
+app.use('/api-docs', swagger.serve, swagger.setup(swaggerDocument));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

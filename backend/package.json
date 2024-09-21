@@ -18,6 +18,10 @@
     "express": "^4.19.2",
     "mqtt": "^5.10.1",
     "mysql": "^2.18.1",
-    "nodejs": "^0.0.0"
+    "nodejs": "^0.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.5.1",
+    "yamljs": "^0.3.0"
   }
 }

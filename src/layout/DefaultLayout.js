@@ -1,12 +1,10 @@
 import React from "react";
 import AppSidebar from "../components/AppSidebar";
 import AppContent from "../components/AppContent";
-import { CContainer, CHeader, CNavbar, CNavItem } from "@coreui/react";
 function DefaultLayout() {
   return (
     <div>
       <AppSidebar />
-     
       <div className="wrapper d-flex flex-column min-vh-100">
         <div className="body flex-grow-1">
           <AppContent />
