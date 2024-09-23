@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CHeader, CContainer } from "@coreui/react";
 import DataTable from "react-data-table-component";
-import ActionHistoryData, {
-  useActionHistoryData,
-} from "../data/ActionHistoryData";
 
 import {
   TiArrowSortedDown as SortDown,
@@ -13,26 +10,8 @@ import {
 import { CiSearch } from "react-icons/ci";
 import axios from "axios";
 
-// Debounce function to delay calling the API
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
 function ActionHistory() {
-  const data = useActionHistoryData();
-  const [record, setRecord] = React.useState(data);
+  const [record, setRecord] = useState([]);
   const [dateFilter, setDateFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [deviceFilter, setDeviceFilter] = useState("");
@@ -41,20 +20,42 @@ function ActionHistory() {
 
   useEffect(() => {}, [activeColumn, sort]);
 
+  useEffect(() => {
+    fetchData({
+      searchTerm,
+      dateFilter,
+      deviceFilter,
+    });
+  }, []);
+  
+  const fetchData = async (filters = {}) => {
+    try {
+      const response = await axios.get("http://localhost:8081/datasearch2", {
+        params: filters,
+      });
+      setRecord(response.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
   const handleSort = (column) => {
     const newSortOrder =
-        sort === "desc" ? "asc" : sort === "asc" ? "desc" : "desc";
+      sort === "desc" ? "asc" : sort === "asc" ? "desc" : "desc";
     setSort(newSortOrder);
     setActiveColumn(column); // Set the column as active
 
     const fetch = async () => {
       try {
-        const response = await axios.get("http://localhost:8081/sort2", {
-          params: {
-            column, 
-            sort: newSortOrder, // Send sort order (asc, desc, or all)
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:8081/sort_history",
+          {
+            params: {
+              column,
+              sort: newSortOrder, // Send sort order (asc, desc, or all)
+            },
+          }
+        );
         setRecord(response.data); // Update data with sorted results
       } catch (error) {
         console.error("Error fetching sorted data:", error);
@@ -121,25 +122,12 @@ function ActionHistory() {
     },
   ];
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 300); // 300ms debounce delay
-
-  useEffect(() => {
+  const handleSearch = () => {
     fetchData({
-      searchTerm: debouncedSearchTerm,
+      searchTerm: searchTerm,
       dateFilter,
       deviceFilter,
     });
-  }, [debouncedSearchTerm, dateFilter, deviceFilter]);
-
-  const fetchData = async (filters = {}) => {
-    try {
-      const response = await axios.get("http://localhost:8081/datasearch2", {
-        params: filters,
-      });
-      setRecord(response.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
   };
 
   const handleSearchTermChange = (e) => {
@@ -191,6 +179,13 @@ function ActionHistory() {
             placeholder="Tìm kiếm..."
           />
         </div>
+        <button
+          type="button"
+          class="btn btn-outline-primary ms-3"
+          onClick={handleSearch}
+        >
+          Tìm kiếm
+        </button>
       </div>
 
       {/* Date Filter */}

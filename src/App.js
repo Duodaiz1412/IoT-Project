@@ -2,6 +2,7 @@ import React, { Suspense, useEffect } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { CSpinner } from "@coreui/react";
 import "./styles/style.scss";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 const DefaultLayout = React.lazy(() => import("./layout/DefaultLayout"));

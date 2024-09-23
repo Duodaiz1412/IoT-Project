@@ -3,7 +3,6 @@ import { CHeader, CContainer } from "@coreui/react";
 import DataTable from "react-data-table-component";
 import { CiSearch } from "react-icons/ci";
 import axios from "axios";
-import DataSensorData from "../data/DataSensorData";
 
 import {
   TiArrowSortedDown as SortDown,
@@ -11,47 +10,27 @@ import {
   TiArrowUnsorted as UnSort,
 } from "react-icons/ti";
 
-// Debounce function to delay calling the API
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
 function DataSensor() {
   const [record, setRecord] = useState([]);
   const [dateFilter, setDateFilter] = useState("");
-  const [parameterFilter, setParameterFilter] = useState("all");
+  const [parameterFilter, setParameterFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [sort, setSort] = useState("desc");
   const [activeColumn, setActiveColumn] = useState(null); // Track the active column
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 300); // 300ms debounce delay
 
   useEffect(() => {}, [activeColumn, sort]);
 
   const handleSort = (column) => {
     const newSortOrder =
-        sort === "desc" ? "asc" : sort === "asc" ? "desc" : "desc";
+      sort === "desc" ? "asc" : sort === "asc" ? "desc" : "desc";
     setSort(newSortOrder);
     setActiveColumn(column); // Set the column as active
 
     const fetch = async () => {
       try {
-        const response = await axios.get("http://localhost:8081/sort1", {
+        const response = await axios.get("http://localhost:8081/sort_sensor", {
           params: {
             column,
-            parameterFilter,
             sort: newSortOrder, // Send sort order (asc, desc, or all)
           },
         });
@@ -112,9 +91,7 @@ function DataSensor() {
       name: (
         <>
           Ánh sáng
-          <span onClick={() => handleSort("lux")}>
-            {sortIcon("lux")}
-          </span>{" "}
+          <span onClick={() => handleSort("lux")}>{sortIcon("lux")}</span>{" "}
         </>
       ),
       selector: (row) => row.lux,
@@ -134,11 +111,11 @@ function DataSensor() {
 
   useEffect(() => {
     fetchData({
-      searchTerm: debouncedSearchTerm,
+      searchTerm,
       dateFilter,
       parameterFilter,
     });
-  }, [debouncedSearchTerm, dateFilter, parameterFilter]);
+  }, []);
 
   const fetchData = async (filters = {}) => {
     try {
@@ -149,6 +126,14 @@ function DataSensor() {
     } catch (error) {
       console.error("Error fetching data:", error);
     }
+  };
+
+  const handleSearch = () => {
+    fetchData({
+      searchTerm: searchTerm,
+      dateFilter,
+      parameterFilter,
+    });
   };
 
   const handleSearchTermChange = (e) => {
@@ -177,16 +162,19 @@ function DataSensor() {
         <select
           className="form-select me-3"
           style={{ maxWidth: "160px" }}
-          defaultValue="all"
+          defaultValue=""
           onChange={handleParameterFilterChange}
         >
-          <option value="all">Tất cả thông số</option>
-          <option value="nhiệt độ">Nhiệt độ</option>
-          <option value="độ ẩm">Độ ẩm</option>
-          <option value="ánh sáng">Ánh sáng</option>
+          <option value="">Tất cả thông số</option>
+          <option value="temp">Nhiệt độ</option>
+          <option value="humidity">Độ ẩm</option>
+          <option value="lux">Ánh sáng</option>
         </select>
 
-        <div className="input-group" style={{ maxWidth: "300px" }}>
+        <div
+          className="input-group"
+          style={{ maxWidth: "300px", marginRight: "8px" }}
+        >
           <span className="input-group-text">
             <CiSearch />
           </span>
@@ -197,6 +185,13 @@ function DataSensor() {
             placeholder="Tìm kiếm..."
           />
         </div>
+        <button
+          type="button"
+          class="btn btn-outline-primary ms-1"
+          onClick={handleSearch}
+        >
+          Tìm kiếm
+        </button>
       </div>
 
       <input
