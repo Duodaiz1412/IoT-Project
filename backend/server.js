@@ -6,7 +6,6 @@ const swagger = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const YAML = require("yamljs");
 
-
 const app = express();
 const PORT = 8081;
 const client = mqtt.connect("mqtt://172.20.10.2");
@@ -15,8 +14,8 @@ const MQTT_TOPIC = "iot_project";
 const MQTT_REQUEST = "iot_project_request";
 const MQTT_UPDATE = "iot_project_update";
 
-let dataSensor = []
-let actionHistory = []
+let dataSensor = [];
+let actionHistory = [];
 
 // Allow cross-origin requests from the frontend app
 app.use(
@@ -126,7 +125,7 @@ app.get("/status", (req, res) => {
 });
 
 // Get data from the database for data sensor
-app.get("/data1", (req, res) => {
+app.get("/data_sensor", (req, res) => {
   const sql = "SELECT * FROM data_sensor ORDER BY id DESC";
   db.query(sql, (err, result) => {
     if (err) {
@@ -159,7 +158,7 @@ app.get("/data1", (req, res) => {
 });
 
 // Get data from the database for action history
-app.get("/data2", (req, res) => {
+app.get("/action_history", (req, res) => {
   const sql = "SELECT * FROM action_history ORDER BY id DESC";
   db.query(sql, (err, result) => {
     if (err) {
@@ -255,8 +254,8 @@ app.post("/actiondata", async (req, res) => {
                 );
               } else {
                 console.log("Action history inserted into database:", {
-                  dev,
-                  act,
+                  device,
+                  action,
                 });
               }
             });
@@ -277,36 +276,41 @@ app.post("/actiondata", async (req, res) => {
   }
 });
 
-app.get("/datasearch1", (req, res) => {
+app.get("/sensor_search", (req, res) => {
   const {
     parameterFilter,
     dateFilter,
-    searchTerm
-  } = req.query; 
+    searchTerm,
+    pageSize = 10,
+    currentPage = 1,
+  } = req.query;
   console.log(req.query);
 
   let query = "SELECT * FROM data_sensor";
-  if(searchTerm && searchTerm !== 'undefined'){
-    if (parameterFilter)
-      query += " WHERE ";
+  if (searchTerm && searchTerm !== "undefined") {
+    if (parameterFilter) query += " WHERE ";
     if (parameterFilter) {
-      if(parameterFilter === "temp") query += `ROUND(temperature, 1) = ${searchTerm} `;
-      if(parameterFilter === "humidity") query += `humidity = ${searchTerm} `;
-      if(parameterFilter === "lux") query += `ROUND(lux, 1) = ${searchTerm} `;
-    } else{
+      if (parameterFilter === "temp")
+        query += `ROUND(temperature, 1) = ${searchTerm} `;
+      if (parameterFilter === "humidity") query += `humidity = ${searchTerm} `;
+      if (parameterFilter === "lux") query += `ROUND(lux, 1) = ${searchTerm} `;
+    } else {
       query += ` WHERE (ROUND(temperature, 1) = ${searchTerm} OR humidity = ${searchTerm} OR ROUND(lux, 1) = ${searchTerm})`;
     }
   }
-  
-  if (dateFilter && searchTerm === 'undefined' || !searchTerm && dateFilter)
+
+  if ((dateFilter && searchTerm === "undefined") || (!searchTerm && dateFilter))
     query += ` WHERE date >= '${dateFilter} 00:00:00' AND date <= '${dateFilter} 23:59:59'`;
-  else if(dateFilter && searchTerm){
+  else if (dateFilter && searchTerm) {
     query += ` AND date >= '${dateFilter} 00:00:00' AND date <= '${dateFilter} 23:59:59'`;
   }
-
   query += " ORDER BY ID DESC ";
-  // if (pageSize) query += `LIMIT ${pageSize} `;
-  // if (currentPage) query += `OFFSET ${(currentPage - 1) * pageSize}`;
+
+  // Pagination logic
+  const limit = parseInt(pageSize);
+  const offset = (parseInt(currentPage) - 1) * limit;
+  query += ` LIMIT ${limit} OFFSET ${offset}`;
+
   console.log(query);
   // query db ;
   db.query(query, (err, result) => {
@@ -316,7 +320,7 @@ app.get("/datasearch1", (req, res) => {
     }
 
     const data = result.map((row) => {
-      const dateObj = new Date(row.date + 'Z');
+      const dateObj = new Date(row.date + "Z");
       const formattedDate = `${dateObj.getUTCFullYear()}-${String(
         dateObj.getUTCMonth() + 1
       ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
@@ -325,7 +329,6 @@ app.get("/datasearch1", (req, res) => {
       )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
         dateObj.getUTCMinutes()
       ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
-
       return {
         id: row.id,
         temperature: row.temperature,
@@ -335,43 +338,55 @@ app.get("/datasearch1", (req, res) => {
       };
     });
     dataSensor = data;
-    return res.json(data)
+    return res.json(data);
   });
 });
 
-app.get("/datasearch2", (req, res) => {
+app.get("/history_search", (req, res) => {
   const {
     deviceFilter,
     dateFilter,
-    searchTerm
-  } = req.query; 
+    searchTerm,
+    pageSize = 10,
+    currentPage = 1,
+  } = req.query;
   console.log(req.query);
 
   let query = "SELECT * FROM action_history";
-  if(searchTerm && searchTerm !== 'undefined'){
-    if (deviceFilter)
-      query += " WHERE ";
+  if (searchTerm && searchTerm !== "undefined") {
+    if (deviceFilter) query += " WHERE ";
     if (deviceFilter) {
-      if(deviceFilter === "đèn") query += `device = "Đèn" `;
-      if(deviceFilter === "điều hoà") query += `device = "Điều hoà" `;
-      if(deviceFilter === "quạt") query += `device = "Quạt" `;
+      if (deviceFilter === "đèn") query += `device = "Đèn" `;
+      if (deviceFilter === "điều hoà") query += `device = "Điều hoà" `;
+      if (deviceFilter === "quạt") query += `device = "Quạt" `;
       query += `AND action = '${searchTerm}' `;
     } else {
       query += ` WHERE (device = '${searchTerm}' OR action = '${searchTerm}') `;
     }
-  } else if(!searchTerm && deviceFilter){
-      query += " WHERE ";
-      if(deviceFilter === "đèn") query += `device = "Đèn" `;
-      if(deviceFilter === "điều hoà") query += `device = "Điều hoà" `;
-      if(deviceFilter === "quạt") query += `device = "Quạt" `;
+  } else if (!searchTerm && deviceFilter) {
+    query += " WHERE ";
+    if (deviceFilter === "đèn") query += `device = "Đèn" `;
+    if (deviceFilter === "điều hoà") query += `device = "Điều hoà" `;
+    if (deviceFilter === "quạt") query += `device = "Quạt" `;
   }
 
-  if ((dateFilter && searchTerm === 'undefined' && !deviceFilter) || (!searchTerm && dateFilter && !deviceFilter) )
+  if (
+    (dateFilter && searchTerm === "undefined" && !deviceFilter) ||
+    (!searchTerm && dateFilter && !deviceFilter)
+  )
     query += ` WHERE Date >= '${dateFilter} 00:00:00' AND Date <= '${dateFilter} 23:59:59'`;
-  else if((dateFilter && searchTerm) || (dateFilter && deviceFilter)){
+  else if ((dateFilter && searchTerm) || (dateFilter && deviceFilter)) {
     query += ` AND Date >= '${dateFilter} 00:00:00' AND Date <= '${dateFilter} 23:59:59'`;
   }
+  
   query += " ORDER BY ID DESC ";
+
+  // Pagination logic
+  const limit = parseInt(pageSize);
+  const offset = (parseInt(currentPage) - 1) * limit;
+  query += ` LIMIT ${limit} OFFSET ${offset}`;
+
+  
   // if (pageSize) query += `LIMIT ${pageSize} `;
   // if (currentPage) query += `OFFSET ${(currentPage - 1) * pageSize}`;
   console.log(query);
@@ -383,7 +398,7 @@ app.get("/datasearch2", (req, res) => {
     }
 
     const data = result.map((row) => {
-      const dateObj = new Date(row.date + 'Z');
+      const dateObj = new Date(row.date + "Z");
       const formattedDate = `${dateObj.getUTCFullYear()}-${String(
         dateObj.getUTCMonth() + 1
       ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
@@ -401,7 +416,7 @@ app.get("/datasearch2", (req, res) => {
       };
     });
     actionHistory = data;
-    return res.json(data)
+    return res.json(data);
   });
 });
 
@@ -439,24 +454,8 @@ app.get("/sort_history", (req, res) => {
   res.json(sortedData);
 });
 
-// const option = {
-//   definition: {
-//     openapi: "3.0.0",
-//     info: {
-//       title: "IOT Project API",
-//       version: "1.0.0", 
-//       description: "An API for IOT Project",
-//     },
-//     servers: [
-//       {
-//         url: "http://localhost:8081 ",
-//       },
-//     ],
-//   },
-//   apis: ["../src/pages/*.js"],
-// };
-const swaggerDocument = YAML.load('./apidocs.yaml');
-app.use('/api-docs', swagger.serve, swagger.setup(swaggerDocument));
+const swaggerDocument = YAML.load("./apidocs.yaml");
+app.use("/api-docs", swagger.serve, swagger.setup(swaggerDocument));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

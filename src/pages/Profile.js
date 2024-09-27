@@ -35,7 +35,8 @@ const ProfilePage = () => {
               <Card.Text>
                 Build an IoT system to monitor and control environmental parameters such as temperature, humidity, and light. 
                 The system also allows for controlling devices such as fans, air conditioners, 
-                and lights through a user-friendly interface.
+                and lights through a user-friendly interface. Link to the document of the project: &nbsp;
+                <a href="https://drive.google.com/file/d/143sZTtUgLB676G40vt9Uc8OSg75fzRr8/view?usp=sharing" target="_blank">Drive</a>
               </Card.Text>
               <hr />
               <Row>

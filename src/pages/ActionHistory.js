@@ -18,6 +18,11 @@ function ActionHistory() {
   const [sort, setSort] = useState("desc");
   const [activeColumn, setActiveColumn] = useState(null); // Track the active column
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+
   useEffect(() => {}, [activeColumn, sort]);
 
   useEffect(() => {
@@ -27,12 +32,15 @@ function ActionHistory() {
       deviceFilter,
     });
   }, []);
-  
+
   const fetchData = async (filters = {}) => {
     try {
-      const response = await axios.get("http://localhost:8081/datasearch2", {
-        params: filters,
-      });
+      const response = await axios.get(
+        "http://localhost:8081/history_search",
+        {
+          params: filters,
+        }
+      );
       setRecord(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -47,15 +55,12 @@ function ActionHistory() {
 
     const fetch = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8081/sort_history",
-          {
-            params: {
-              column,
-              sort: newSortOrder, // Send sort order (asc, desc, or all)
-            },
-          }
-        );
+        const response = await axios.get("http://localhost:8081/sort_history", {
+          params: {
+            column,
+            sort: newSortOrder, // Send sort order (asc, desc, or all)
+          },
+        });
         setRecord(response.data); // Update data with sorted results
       } catch (error) {
         console.error("Error fetching sorted data:", error);
@@ -142,6 +147,28 @@ function ActionHistory() {
     setDateFilter(e.target.value);
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchData({
+      searchTerm,
+      dateFilter,
+      deviceFilter,
+      pageSize,
+      currentPage: page,
+    });
+  };
+
+  const handleRowsPerPageChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    fetchData({
+      searchTerm,
+      dateFilter,
+      deviceFilter,
+      pageSize: newPageSize,
+      currentPage,
+    });
+  };
+
   return (
     <>
       {/* Header */}
@@ -200,6 +227,12 @@ function ActionHistory() {
         columns={columns} // Use dynamic columns here
         data={record}
         pagination
+        paginationServer
+        paginationTotalRows={totalRows}
+        paginationDefaultPage={currentPage}
+        paginationPerPage={pageSize}
+        onChangePage={handlePageChange}
+        onChangeRowsPerPage={handleRowsPerPageChange}
         fixedHeader
         highlightOnHover
       />

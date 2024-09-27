@@ -18,6 +18,11 @@ function DataSensor() {
   const [sort, setSort] = useState("desc");
   const [activeColumn, setActiveColumn] = useState(null); // Track the active column
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+
   useEffect(() => {}, [activeColumn, sort]);
 
   const handleSort = (column) => {
@@ -119,7 +124,7 @@ function DataSensor() {
 
   const fetchData = async (filters = {}) => {
     try {
-      const response = await axios.get("http://localhost:8081/datasearch1", {
+      const response = await axios.get("http://localhost:8081/sensor_search", {
         params: filters,
       });
       setRecord(response.data);
@@ -146,6 +151,20 @@ function DataSensor() {
 
   const handleDateFilterChange = (e) => {
     setDateFilter(e.target.value);
+  };
+
+  const handleRowsPerPageChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    fetchData(currentPage, newPageSize, {
+      searchTerm,
+      dateFilter,
+      parameterFilter,
+    });
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchData(page, pageSize, { searchTerm, dateFilter, parameterFilter });
   };
 
   return (
@@ -204,7 +223,13 @@ function DataSensor() {
       <DataTable
         columns={columns}
         data={record}
-        pagination
+        // pagination
+        paginationServer
+        paginationTotalRows={totalRows}
+        paginationDefaultPage={currentPage}
+        paginationPerPage={pageSize}
+        onChangePage={handlePageChange}
+        onChangeRowsPerPage={handleRowsPerPageChange}
         fixedHeader
         highlightOnHover
       />

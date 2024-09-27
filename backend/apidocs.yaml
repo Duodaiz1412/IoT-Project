@@ -1,46 +1,54 @@
 openapi: 3.0.0
 info:
   title: IoT Project API
+  description: API for interacting with IoT devices, collecting sensor data, and logging actions.
   version: 1.0.0
-  description: API for IoT Project managing sensor data and device actions
 servers:
   - url: http://localhost:8081
+    description: Local server
+
 paths:
   /status:
     get:
-      summary: Get latest status data
-      description: Retrieves the latest status data for fan, light, AC, temperature, humidity, and lux
+      summary: Retrieve the latest status of IoT devices.
       responses:
-        '200':
-          description: Successful response
+        200:
+          description: Successfully retrieved device status.
           content:
-            application/json:    
+            application/json:
               schema:
                 type: array
                 items:
                   type: object
                   properties:
-                    fan: 
-                      type: boolean
-                    light: 
-                      type: boolean
-                    ac: 
-                      type: boolean
-                    temperature: 
+                    fan:
+                      type: string
+                      description: Fan status
+                    light:
+                      type: string
+                      description: Light status
+                    ac:
+                      type: string
+                      description: AC status
+                    temperature:
                       type: number
-                    humidity: 
+                      format: float
+                      description: Temperature in Celsius
+                    humidity:
                       type: number
-                    lux: 
+                      format: float
+                      description: Humidity percentage
+                    lux:
                       type: number
-        '500':
-          description: Server error
-  /data1:
+                      format: float
+                      description: Light intensity in lux
+
+  /data_sensor:
     get:
-      summary: Get all sensor data
-      description: Retrieves all sensor data from the database
+      summary: Retrieve sensor data from the database.
       responses:
-        '200':
-          description: Successful response
+        200:
+          description: Successfully retrieved sensor data.
           content:
             application/json:
               schema:
@@ -52,22 +60,27 @@ paths:
                       type: integer
                     temperature:
                       type: number
+                      format: float
+                      description: Temperature in Celsius
                     humidity:
                       type: number
+                      format: float
+                      description: Humidity percentage
                     lux:
                       type: number
+                      format: float
+                      description: Light intensity in lux
                     date:
                       type: string
                       format: date-time
-        '500':
-          description: Server error
-  /data2:
+                      description: Date and time of data record
+
+  /action_history:
     get:
-      summary: Get all action history
-      description: Retrieves all action history data from the database
+      summary: Retrieve action history from the database.
       responses:
-        '200':
-          description: Successful response
+        200:
+          description: Successfully retrieved action history.
           content:
             application/json:
               schema:
@@ -79,17 +92,18 @@ paths:
                       type: integer
                     device:
                       type: string
+                      description: The device involved (fan, light, AC)
                     action:
                       type: string
+                      description: The action performed (on/off)
                     date:
                       type: string
                       format: date-time
-        '500':
-          description: Server error
+                      description: The date and time of the action
+
   /actiondata:
     post:
-      summary: Send action data
-      description: Sends action data to control a device
+      summary: Send action data to the IoT device.
       requestBody:
         required: true
         content:
@@ -99,171 +113,84 @@ paths:
               properties:
                 device:
                   type: string
+                  description: The device to control (fan, light, AC)
                 action:
                   type: string
+                  description: The action to perform (on/off)
       responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  device:
-                    type: string
-                  action:
-                    type: string
-        '500':
-          description: Server error
-  /datasearch1:
+        200:
+          description: Successfully sent action to the IoT device.
+        500:
+          description: Failed to send action data to the MQTT broker
+
+  /sensor_search:
     get:
-      summary: Search sensor data
-      description: Search and filter sensor data
+      summary: Search sensor data with filters.
       parameters:
-        - in: query
-          name: searchTerm
+        - name: parameterFilter
+          in: query
+          description: The sensor parameter to filter (temperature, humidity, lux)
           schema:
             type: string
-        - in: query
-          name: dateFilter
+        - name: dateFilter
+          in: query
+          description: Filter data by date.
           schema:
             type: string
-        - in: query
-          name: parameterFilter
+            format: date
+        - name: searchTerm
+          in: query
+          description: Value to search for within the specified parameter.
           schema:
             type: string
+        - name: pageSize
+          in: query
+          description: Number of results to return per page.
+          schema:
+            type: integer
+        - name: currentPage
+          in: query
+          description: The page number of the results to return.
+          schema:
+            type: integer
       responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    temperature:
-                      type: number
-                    humidity:
-                      type: number
-                    lux:
-                      type: number
-                    date:
-                      type: string
-                      format: date-time
-        '500':
-          description: Server error
-  /datasearch2:
+        200:
+          description: Successfully retrieved sensor search results.
+        500:
+          description: Failed to execute search query
+
+  /history_search:
     get:
-      summary: Search action history
-      description: Search and filter action history data
+      summary: Search action history with filters.
       parameters:
-        - in: query
-          name: searchTerm
+        - name: deviceFilter
+          in: query
+          description: Filter by device (fan, light, AC)
           schema:
             type: string
-        - in: query
-          name: dateFilter
+        - name: dateFilter
+          in: query
+          description: Filter actions by date.
           schema:
             type: string
-        - in: query
-          name: deviceFilter
+            format: date
+        - name: searchTerm
+          in: query
+          description: Search for specific action.
           schema:
             type: string
+        - name: pageSize
+          in: query
+          description: Number of results to return per page.
+          schema:
+            type: integer
+        - name: currentPage
+          in: query
+          description: The page number of the results to return.
+          schema:
+            type: integer
       responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    device:
-                      type: string
-                    action:
-                      type: string
-                    date:
-                      type: string
-                      format: date-time
-        '500':
-          description: Server error
-  /sort1:
-    get:
-      summary: Sort sensor data
-      description: Sort sensor data by specified column and order
-      parameters:
-        - in: query
-          name: column
-          schema:
-            type: string
-        - in: query
-          name: sort
-          schema:
-            type: string
-        - in: query
-          name: parameterFilter
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    temperature:
-                      type: number
-                    humidity:
-                      type: number
-                    lux:
-                      type: number
-                    date:
-                      type: string
-                      format: date-time
-        '500':
-          description: Server error
-  /sort2:
-    get:
-      summary: Sort action history
-      description: Sort action history data by specified column and order
-      parameters:
-        - in: query
-          name: column
-          schema:
-            type: string
-        - in: query
-          name: sort
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    device:
-                      type: string
-                    action:
-                      type: string
-                    date:
-                      type: string
-                      format: date-time
-        '500':
-          description: Server error
+        200:
+          description: Successfully retrieved action history search results.
+        500:
+          description: Failed to execute search query
