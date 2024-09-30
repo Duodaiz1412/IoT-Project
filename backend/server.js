@@ -276,6 +276,74 @@ app.post("/actiondata", async (req, res) => {
   }
 });
 
+// app.get("/sensor_search", (req, res) => {
+//   const {
+//     parameterFilter,
+//     dateFilter,
+//     searchTerm,
+//     pageSize = 10,
+//     currentPage = 1,
+//   } = req.query;
+//   console.log(req.query);
+
+//   let query = "SELECT * FROM data_sensor";
+//   if (searchTerm && searchTerm !== "undefined") {
+//     if (parameterFilter) query += " WHERE ";
+//     if (parameterFilter) {
+//       if (parameterFilter === "temp")
+//         query += `ROUND(temperature, 1) = ${searchTerm} `;
+//       if (parameterFilter === "humidity") query += `humidity = ${searchTerm} `;
+//       if (parameterFilter === "lux") query += `ROUND(lux, 1) = ${searchTerm} `;
+//     } else {
+//       query += ` WHERE (ROUND(temperature, 1) = ${searchTerm} OR humidity = ${searchTerm} OR ROUND(lux, 1) = ${searchTerm})`;
+//     }
+//   }
+
+//   if ((dateFilter && searchTerm === "undefined") || (!searchTerm && dateFilter))
+//     query += ` WHERE date >= '${dateFilter} 00:00:00' AND date <= '${dateFilter} 23:59:59'`;
+//   else if (dateFilter && searchTerm) {
+//     query += ` AND date >= '${dateFilter} 00:00:00' AND date <= '${dateFilter} 23:59:59'`;
+//   }
+//   query += " ORDER BY ID DESC ";
+
+//   // Pagination logic
+//   const limit = parseInt(pageSize);
+//   const offset = (parseInt(currentPage) - 1) * limit;
+//   query += ` LIMIT ${limit} OFFSET ${offset}`;
+
+//   console.log(query);
+//   // query db ;
+//   db.query(query, (err, result) => {
+//     if (err) {
+//       console.error("Error executing SQL query:", err);
+//       return res.status(500).json({ error: "Error executing SQL query" });
+//     }
+
+//     const totalRows = result.length;
+
+//     const data = result.map((row) => {
+//       const dateObj = new Date(row.date + "Z");
+//       const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+//         dateObj.getUTCMonth() + 1
+//       ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+//         2,
+//         "0"
+//       )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+//         dateObj.getUTCMinutes()
+//       ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
+//       return {
+//         id: row.id,
+//         temperature: row.temperature,
+//         humidity: row.humidity,
+//         lux: row.lux,
+//         date: formattedDate,
+//       };
+//     });
+//     dataSensor = data;
+//     return res.json({data, totalRows});
+//   });
+// });
+
 app.get("/sensor_search", (req, res) => {
   const {
     parameterFilter,
@@ -284,63 +352,86 @@ app.get("/sensor_search", (req, res) => {
     pageSize = 10,
     currentPage = 1,
   } = req.query;
+
   console.log(req.query);
 
-  let query = "SELECT * FROM data_sensor";
+  // Base query and count query initialization
+  let baseQuery = "SELECT * FROM data_sensor";
+  let countQuery = "SELECT COUNT(*) AS total FROM data_sensor";
+  let whereClause = "";
+
+  // Search term logic
   if (searchTerm && searchTerm !== "undefined") {
-    if (parameterFilter) query += " WHERE ";
+    if (parameterFilter) whereClause += " WHERE ";
     if (parameterFilter) {
       if (parameterFilter === "temp")
-        query += `ROUND(temperature, 1) = ${searchTerm} `;
-      if (parameterFilter === "humidity") query += `humidity = ${searchTerm} `;
-      if (parameterFilter === "lux") query += `ROUND(lux, 1) = ${searchTerm} `;
+        whereClause += `ROUND(temperature, 1) = ${searchTerm} `;
+      if (parameterFilter === "humidity")
+        whereClause += `humidity = ${searchTerm} `;
+      if (parameterFilter === "lux") whereClause += `ROUND(lux, 1) = ${searchTerm} `;
     } else {
-      query += ` WHERE (ROUND(temperature, 1) = ${searchTerm} OR humidity = ${searchTerm} OR ROUND(lux, 1) = ${searchTerm})`;
+      whereClause += ` WHERE (ROUND(temperature, 1) = ${searchTerm} OR humidity = ${searchTerm} OR ROUND(lux, 1) = ${searchTerm}) `;
     }
   }
 
-  if ((dateFilter && searchTerm === "undefined") || (!searchTerm && dateFilter))
-    query += ` WHERE date >= '${dateFilter} 00:00:00' AND date <= '${dateFilter} 23:59:59'`;
-  else if (dateFilter && searchTerm) {
-    query += ` AND date >= '${dateFilter} 00:00:00' AND date <= '${dateFilter} 23:59:59'`;
+  // Date filter logic
+  if ((dateFilter && !searchTerm && !parameterFilter) || (!searchTerm && dateFilter && !parameterFilter)) {
+    whereClause += ` WHERE date >= '${dateFilter} 00:00:00' AND date <= '${dateFilter} 23:59:59'`;
+  } else if (dateFilter && (searchTerm || parameterFilter)) {
+    whereClause += ` AND date >= '${dateFilter} 00:00:00' AND date <= '${dateFilter} 23:59:59'`;
   }
-  query += " ORDER BY ID DESC ";
 
-  // Pagination logic
   const limit = parseInt(pageSize);
   const offset = (parseInt(currentPage) - 1) * limit;
-  query += ` LIMIT ${limit} OFFSET ${offset}`;
 
-  console.log(query);
-  // query db ;
-  db.query(query, (err, result) => {
+  // Add where clause to base and count queries
+  countQuery += whereClause;
+  baseQuery += whereClause + " ORDER BY ID DESC LIMIT ? OFFSET ?";
+
+  console.log(countQuery);
+
+  // Query for total records
+  db.query(countQuery, (err, countResult) => {
     if (err) {
-      console.error("Error executing SQL query:", err);
-      return res.status(500).json({ error: "Error executing SQL query" });
+      console.error("Error executing count query:", err);
+      return res.status(500).json({ error: "Error executing count query" });
     }
 
-    const data = result.map((row) => {
-      const dateObj = new Date(row.date + "Z");
-      const formattedDate = `${dateObj.getUTCFullYear()}-${String(
-        dateObj.getUTCMonth() + 1
-      ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
-        2,
-        "0"
-      )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
-        dateObj.getUTCMinutes()
-      ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
-      return {
-        id: row.id,
-        temperature: row.temperature,
-        humidity: row.humidity,
-        lux: row.lux,
-        date: formattedDate,
-      };
+    const totalRows = countResult[0].total; // Assuming `total` is the first field
+    console.log(baseQuery);
+
+    // Query for paginated results
+    db.query(baseQuery, [limit, offset], (err, result) => {
+      if (err) {
+        console.error("Error executing SQL query:", err);
+        return res.status(500).json({ error: "Error executing SQL query" });
+      }
+
+      const data = result.map((row) => {
+        const dateObj = new Date(row.date + "Z");
+        const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+          dateObj.getUTCMonth() + 1
+        ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+          2,
+          "0"
+        )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+          dateObj.getUTCMinutes()
+        ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
+
+        return {
+          id: row.id,
+          temperature: row.temperature,
+          humidity: row.humidity,
+          lux: row.lux,
+          date: formattedDate,
+        };
+      });
+      dataSensor = data;
+      return res.json({ data, totalRows});
     });
-    dataSensor = data;
-    return res.json(data);
   });
 });
+
 
 app.get("/history_search", (req, res) => {
   const {
@@ -352,79 +443,92 @@ app.get("/history_search", (req, res) => {
   } = req.query;
   console.log(req.query);
 
-  let query = "SELECT * FROM action_history";
+  let baseQuery = "SELECT * FROM action_history";
+  let countQuery = "SELECT COUNT(*) AS total FROM action_history";
+  let whereClause = "";
+  
   if (searchTerm && searchTerm !== "undefined") {
-    if (deviceFilter) query += " WHERE ";
+    if (deviceFilter) whereClause += " WHERE ";
     if (deviceFilter) {
-      if (deviceFilter === "đèn") query += `device = "Đèn" `;
-      if (deviceFilter === "điều hoà") query += `device = "Điều hoà" `;
-      if (deviceFilter === "quạt") query += `device = "Quạt" `;
-      query += `AND action = '${searchTerm}' `;
+      if (deviceFilter === "đèn") whereClause += `device = "Đèn" `;
+      if (deviceFilter === "điều hoà") whereClause += `device = "Điều hoà" `;
+      if (deviceFilter === "quạt") whereClause += `device = "Quạt" `;
+      whereClause += `AND action = '${searchTerm}' `;
     } else {
-      query += ` WHERE (device = '${searchTerm}' OR action = '${searchTerm}') `;
+      whereClause += ` WHERE (device = '${searchTerm}' OR action = '${searchTerm}') `;
     }
   } else if (!searchTerm && deviceFilter) {
-    query += " WHERE ";
-    if (deviceFilter === "đèn") query += `device = "Đèn" `;
-    if (deviceFilter === "điều hoà") query += `device = "Điều hoà" `;
-    if (deviceFilter === "quạt") query += `device = "Quạt" `;
+    whereClause += " WHERE ";
+    if (deviceFilter === "đèn") whereClause += `device = "Đèn" `;
+    if (deviceFilter === "điều hoà") whereClause += `device = "Điều hoà" `;
+    if (deviceFilter === "quạt") whereClause += `device = "Quạt" `;
   }
 
   if (
     (dateFilter && searchTerm === "undefined" && !deviceFilter) ||
     (!searchTerm && dateFilter && !deviceFilter)
-  )
-    query += ` WHERE Date >= '${dateFilter} 00:00:00' AND Date <= '${dateFilter} 23:59:59'`;
-  else if ((dateFilter && searchTerm) || (dateFilter && deviceFilter)) {
-    query += ` AND Date >= '${dateFilter} 00:00:00' AND Date <= '${dateFilter} 23:59:59'`;
+  ) {
+    whereClause += ` WHERE Date >= '${dateFilter} 00:00:00' AND Date <= '${dateFilter} 23:59:59'`;
+  } else if ((dateFilter && searchTerm) || (dateFilter && deviceFilter)) {
+    whereClause += ` AND Date >= '${dateFilter} 00:00:00' AND Date <= '${dateFilter} 23:59:59'`;
   }
   
-  query += " ORDER BY ID DESC ";
-
-  // Pagination logic
   const limit = parseInt(pageSize);
   const offset = (parseInt(currentPage) - 1) * limit;
-  query += ` LIMIT ${limit} OFFSET ${offset}`;
-
   
-  // if (pageSize) query += `LIMIT ${pageSize} `;
-  // if (currentPage) query += `OFFSET ${(currentPage - 1) * pageSize}`;
-  console.log(query);
-  // query db ;
-  db.query(query, (err, result) => {
+  // Add the where clause to both queries
+  countQuery += whereClause;
+  baseQuery += whereClause + " ORDER BY ID DESC LIMIT ? OFFSET ?";
+
+  console.log(countQuery);
+  
+  // Query for total records
+  db.query(countQuery, (err, countResult) => {
     if (err) {
-      console.error("Error executing SQL query:", err);
-      return res.status(500).json({ error: "Error executing SQL query" });
+      console.error("Error executing count query:", err);
+      return res.status(500).json({ error: "Error executing count query" });
     }
 
-    const data = result.map((row) => {
-      const dateObj = new Date(row.date + "Z");
-      const formattedDate = `${dateObj.getUTCFullYear()}-${String(
-        dateObj.getUTCMonth() + 1
-      ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
-        2,
-        "0"
-      )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
-        dateObj.getUTCMinutes()
-      ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
+    const totalRows = countResult[0].total; // Assuming `total` is the first field
+    console.log(baseQuery);
 
-      return {
-        id: row.id,
-        device: row.device,
-        action: row.action,
-        date: formattedDate,
-      };
+    // Query for paginated results
+    db.query(baseQuery, [limit, offset], (err, result) => {
+      if (err) {
+        console.error("Error executing SQL query:", err);
+        return res.status(500).json({ error: "Error executing SQL query" });
+      }
+
+      const data = result.map((row) => {
+        const dateObj = new Date(row.date + "Z");
+        const formattedDate = `${dateObj.getUTCFullYear()}-${String(
+          dateObj.getUTCMonth() + 1
+        ).padStart(2, "0")}-${String(dateObj.getUTCDate()).padStart(
+          2,
+          "0"
+        )} ${String(dateObj.getUTCHours()).padStart(2, "0")}:${String(
+          dateObj.getUTCMinutes()
+        ).padStart(2, "0")}:${String(dateObj.getUTCSeconds()).padStart(2, "0")}`;
+
+        return {
+          id: row.id,
+          device: row.device,
+          action: row.action,
+          date: formattedDate,
+        };
+      });
+      actionHistory = data;
+      return res.json({ data, totalRows, pageSize });
     });
-    actionHistory = data;
-    return res.json(data);
   });
 });
+
 
 app.get("/sort_sensor", (req, res) => {
   const { column, sort } = req.query;
   console.log(req.query);
   if (!dataSensor.length) {
-    res.status(400).json({ error: "No data to sort" });
+    res.status(400).json({ error: "No data to sort" }); 
   }
 
   const sortedData = dataSensor.sort((a, b) => {

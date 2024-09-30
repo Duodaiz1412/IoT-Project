@@ -33,7 +33,7 @@ const AppSidebar = () => {
         }}
       >
         <CSidebarHeader className="border-bottom">
-          <CSidebarBrand customClassName="sidebar-brand-full" style={{ textDecoration: 'none', fontWeight: 'bold'}}>
+          <CSidebarBrand className="sidebar-brand-full" style={{ textDecoration: 'none', fontWeight: 'bold'}}>
             <img src={logo} alt="Logo" height={32} className="sidebar-brand-full" />
             &nbsp; IoT Project
           </CSidebarBrand>

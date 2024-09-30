@@ -3,6 +3,7 @@ import { CHeader, CContainer } from "@coreui/react";
 import DataTable from "react-data-table-component";
 import { CiSearch } from "react-icons/ci";
 import axios from "axios";
+import Pagination from "@mui/material/Pagination";
 
 import {
   TiArrowSortedDown as SortDown,
@@ -23,7 +24,7 @@ function DataSensor() {
   const [pageSize, setPageSize] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
 
-  useEffect(() => {}, [activeColumn, sort]);
+  useEffect(() => {}, [activeColumn, sort, currentPage, pageSize]);
 
   const handleSort = (column) => {
     const newSortOrder =
@@ -127,7 +128,11 @@ function DataSensor() {
       const response = await axios.get("http://localhost:8081/sensor_search", {
         params: filters,
       });
-      setRecord(response.data);
+      console.log(response.data);
+      setCurrentPage(1)
+      setRecord(response.data.data);
+      setTotalRows(response.data.totalRows);
+      // handlePageChange(currentPage);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -162,9 +167,27 @@ function DataSensor() {
     });
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    fetchData(page, pageSize, { searchTerm, dateFilter, parameterFilter });
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+    fetchData({
+      searchTerm,
+      dateFilter,
+      parameterFilter,
+      pageSize, 
+      currentPage: value, 
+    });
+  };
+
+  const handlePageSize = (e) => {
+    console.log(e.target.value);
+    setPageSize(e.target.value);
+    fetchData({
+      searchTerm,
+      parameterFilter,
+      dateFilter,
+      pageSize: e.target.value,
+      currentPage,
+    });
   };
 
   return (
@@ -206,7 +229,7 @@ function DataSensor() {
         </div>
         <button
           type="button"
-          class="btn btn-outline-primary ms-1"
+          className="btn btn-outline-primary ms-1"
           onClick={handleSearch}
         >
           Tìm kiếm
@@ -223,16 +246,30 @@ function DataSensor() {
       <DataTable
         columns={columns}
         data={record}
-        // pagination
-        paginationServer
-        paginationTotalRows={totalRows}
-        paginationDefaultPage={currentPage}
-        paginationPerPage={pageSize}
         onChangePage={handlePageChange}
         onChangeRowsPerPage={handleRowsPerPageChange}
-        fixedHeader
         highlightOnHover
       />
+
+      <div className="d-flex justify-content-center mt-3">
+        <select
+          className="form-select me-3"
+          style={{ maxWidth: "150px" }}
+          onChange={handlePageSize}
+          defaultValue=""
+        >
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+          <option value="50">50</option>
+        </select>
+        <Pagination
+          count={Math.ceil(totalRows / pageSize)}
+          defaultPage={1}
+          siblingCount={2} // Increase to show more sibling pages
+          onChange={handlePageChange}
+        />
+      </div>
       <br />
     </>
   );

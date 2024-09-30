@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CHeader, CContainer } from "@coreui/react";
 import DataTable from "react-data-table-component";
+import Pagination from "@mui/material/Pagination";
 
 import {
   TiArrowSortedDown as SortDown,
@@ -33,19 +34,35 @@ function ActionHistory() {
     });
   }, []);
 
+  // const fetchData = async (filters = {}) => {
+  //   try {
+  //     const response = await axios.get("http://localhost:8081/history_search", {
+  //       params: filters,
+  //     });
+  //     console.log(response.data);
+  //     setRecord(response.data.data);
+  //     setCurrentPage(1)
+  //     setTotalRows(response.data.totalRows);
+  //     setPageSize(10);
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //   }
+  // };
+
   const fetchData = async (filters = {}) => {
     try {
-      const response = await axios.get(
-        "http://localhost:8081/history_search",
-        {
-          params: filters,
-        }
-      );
-      setRecord(response.data);
+      const response = await axios.get("http://localhost:8081/history_search", {
+        params: filters,
+      });
+      console.log(response.data);
+      setCurrentPage(1)
+      setRecord(response.data.data);
+      setTotalRows(response.data.totalRows);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
+  
 
   const handleSort = (column) => {
     const newSortOrder =
@@ -59,9 +76,10 @@ function ActionHistory() {
           params: {
             column,
             sort: newSortOrder, // Send sort order (asc, desc, or all)
-          },
+          }
         });
         setRecord(response.data); // Update data with sorted results
+        // setTotalRows(response.data.totalRows);
       } catch (error) {
         console.error("Error fetching sorted data:", error);
       }
@@ -147,27 +165,29 @@ function ActionHistory() {
     setDateFilter(e.target.value);
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value); // Cập nhật currentPage
     fetchData({
       searchTerm,
       dateFilter,
       deviceFilter,
       pageSize,
-      currentPage: page,
+      currentPage: value,
     });
   };
 
-  const handleRowsPerPageChange = (newPageSize) => {
-    setPageSize(newPageSize);
+  const handlePageSize = (e) => {
+    setPageSize(e.target.value);
     fetchData({
       searchTerm,
-      dateFilter,
       deviceFilter,
-      pageSize: newPageSize,
+      dateFilter,
+      pageSize: e.target.value,
       currentPage,
     });
   };
+
+
 
   return (
     <>
@@ -208,7 +228,7 @@ function ActionHistory() {
         </div>
         <button
           type="button"
-          class="btn btn-outline-primary ms-3"
+          className="btn btn-outline-primary ms-3"
           onClick={handleSearch}
         >
           Tìm kiếm
@@ -226,16 +246,29 @@ function ActionHistory() {
       <DataTable
         columns={columns} // Use dynamic columns here
         data={record}
-        pagination
-        paginationServer
-        paginationTotalRows={totalRows}
-        paginationDefaultPage={currentPage}
-        paginationPerPage={pageSize}
-        onChangePage={handlePageChange}
-        onChangeRowsPerPage={handleRowsPerPageChange}
-        fixedHeader
+        // fixedHeader
         highlightOnHover
       />
+      <div className="d-flex justify-content-center mt-3">
+      <select
+          className="form-select me-3"
+          style={{ maxWidth: "150px" }}
+          onChange={handlePageSize}
+          value={pageSize}
+        >
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+          <option value="50">50</option>
+        </select>
+        <Pagination
+          count={Math.ceil(totalRows / pageSize)} 
+          defaultPage={1}
+          siblingCount={2}
+          onChange={handlePageChange}
+        />
+      </div>
+
       <br />
     </>
   );
