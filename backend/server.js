@@ -344,8 +344,14 @@ app.post("/actiondata", async (req, res) => {
 //   });
 // });
 
+const isDate = (searchTerm) => {
+  // Regex to check if searchTerm is a date in the format YYYY-MM-DD or YYYY-MM-DD HH:MM:SS
+  return /^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/.test(searchTerm);
+};
+
+
 app.get("/sensor_search", (req, res) => {
-  const {
+  let {
     parameterFilter,
     dateFilter,
     searchTerm,
@@ -355,22 +361,39 @@ app.get("/sensor_search", (req, res) => {
 
   console.log(req.query);
 
-  // Base query and count query initialization
   let baseQuery = "SELECT * FROM data_sensor";
   let countQuery = "SELECT COUNT(*) AS total FROM data_sensor";
   let whereClause = "";
 
+  const tmp = String(searchTerm || "").trim();
+  
   // Search term logic
-  if (searchTerm && searchTerm !== "undefined") {
-    if (parameterFilter) whereClause += " WHERE ";
-    if (parameterFilter) {
-      if (parameterFilter === "temp")
-        whereClause += `ROUND(temperature, 1) = ${searchTerm} `;
-      if (parameterFilter === "humidity")
-        whereClause += `humidity = ${searchTerm} `;
-      if (parameterFilter === "lux") whereClause += `ROUND(lux, 1) = ${searchTerm} `;
-    } else {
-      whereClause += ` WHERE (ROUND(temperature, 1) = ${searchTerm} OR humidity = ${searchTerm} OR ROUND(lux, 1) = ${searchTerm}) `;
+  if (tmp.length > 8) {
+    if (isDate(tmp)) {
+      whereClause += ` WHERE date LIKE '${tmp}%' `;
+    } else if (parameterFilter) {
+      whereClause += " WHERE ";
+      if (parameterFilter === "temp") {
+        whereClause += `ROUND(temperature, 1) = ${tmp} `;
+      } else if (parameterFilter === "humidity") {
+        whereClause += `humidity = ${tmp} `;
+      } else if (parameterFilter === "lux") {
+        whereClause += `ROUND(lux, 1) = ${tmp} `;
+      }
+    } else if (searchTerm !== "undefined" && searchTerm) {
+      whereClause += ` WHERE (ROUND(temperature, 1) = ${tmp} OR humidity = ${tmp} OR ROUND(lux, 1) = ${tmp}) `;
+    }
+  }
+
+  // Device filter logic, this would be similar to your history_search logic
+  if (!tmp && parameterFilter) {
+    whereClause += " WHERE ";
+    if (parameterFilter === "temp") {
+      whereClause += `ROUND(temperature, 1) = ${tmp} `;
+    } else if (parameterFilter === "humidity") {
+      whereClause += `humidity = ${tmp} `;
+    } else if (parameterFilter === "lux") {
+      whereClause += `ROUND(lux, 1) = ${tmp} `;
     }
   }
 
@@ -427,10 +450,11 @@ app.get("/sensor_search", (req, res) => {
         };
       });
       dataSensor = data;
-      return res.json({ data, totalRows});
+      return res.json({ data, totalRows, pageSize });
     });
   });
 });
+
 
 
 app.get("/history_search", (req, res) => {
@@ -447,21 +471,28 @@ app.get("/history_search", (req, res) => {
   let countQuery = "SELECT COUNT(*) AS total FROM action_history";
   let whereClause = "";
   
-  if (searchTerm && searchTerm !== "undefined") {
-    if (deviceFilter) whereClause += " WHERE ";
-    if (deviceFilter) {
+  const tmp = String(searchTerm || "").trim();
+  if(tmp.length > 8) {
+      whereClause += ` WHERE Date LIKE '%${tmp}%' `;
+    if(deviceFilter){
+      whereClause += `AND device = '${deviceFilter}'`;
+    }
+  }
+  else{
+    if (searchTerm && searchTerm !== "undefined") {
+      if (deviceFilter) whereClause += " WHERE ";
+      if (deviceFilter) {
+        if (deviceFilter === "đèn") whereClause += `device = "Đèn" `;
+        if (deviceFilter === "điều hoà") whereClause += `device = "Điều hoà" `;
+        if (deviceFilter === "quạt") whereClause += `device = "Quạt" `;
+        whereClause += `AND action = '${tmp}' `;
+      }
+    } else if (!searchTerm && deviceFilter) {
+      whereClause += " WHERE ";
       if (deviceFilter === "đèn") whereClause += `device = "Đèn" `;
       if (deviceFilter === "điều hoà") whereClause += `device = "Điều hoà" `;
       if (deviceFilter === "quạt") whereClause += `device = "Quạt" `;
-      whereClause += `AND action = '${searchTerm}' `;
-    } else {
-      whereClause += ` WHERE (device = '${searchTerm}' OR action = '${searchTerm}') `;
     }
-  } else if (!searchTerm && deviceFilter) {
-    whereClause += " WHERE ";
-    if (deviceFilter === "đèn") whereClause += `device = "Đèn" `;
-    if (deviceFilter === "điều hoà") whereClause += `device = "Điều hoà" `;
-    if (deviceFilter === "quạt") whereClause += `device = "Quạt" `;
   }
 
   if (
